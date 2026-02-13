@@ -6,6 +6,11 @@ from langchain_core.tools import StructuredTool
 from src.models import ResearchReport, ResearchTask
 from src.graphs.research_graph import build_research_graph
 
+RESEARCH_AGENT_TOOL_DESCRIPTION = """Run a focused research sub-agent that will perform comprehensive web searches and return a structured report. 
+Usage guidelines:
+1. Specify Intent - The research agent is another LLM based agent that can be given further instructions or clarification to perform the research task.
+2. Be Specific - Research agents excel at individual topic deep dives. Avoid broad, multi-topic queries. Call this tool multiple times for different topics.
+"""
 
 def _run_research_agent(query: str) -> dict:
     task = ResearchTask(query=query)
@@ -21,8 +26,6 @@ def build_research_tool() -> StructuredTool:
     return StructuredTool.from_function(
         func=_run_research_agent,
         name="run_research_agent",
-        description=(
-            "Run a focused research sub-agent and return a structured report."
-        ),
+        description=RESEARCH_AGENT_TOOL_DESCRIPTION,
         args_schema=ResearchTask,
     )

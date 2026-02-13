@@ -7,6 +7,11 @@ AUTO_PARAMETERS = True
 RATE_LIMIT_CALLS = 100
 RATE_LIMIT_PERIOD_SECONDS = 60
 RELEVANCE_SCORE_THRESHOLD = 0
+TOOL_DESCRIPTION = """ Internet Search Tool, takes in a natural language query and returns back relevant results + snippets from the web. 
+Usage guidelines:
+1. Use Natural Language - The search tool is designed to handle semantic queries, avoid search engine operators or specific syntax.
+2. Be Specific - Avoid broad, multi-topic queries. Call this tool multiple times for different topics.
+"""
 
 def _get_search_tool(
     max_results: int = MAX_RESULTS,
@@ -69,5 +74,5 @@ def build_web_search_tool() -> StructuredTool:
     return StructuredTool.from_function(
         func=internet_search,
         name="internet_search",
-        description="Run a web search and return markdown-formatted results.",
+        description=TOOL_DESCRIPTION,
     )
