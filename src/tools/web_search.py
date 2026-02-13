@@ -1,4 +1,4 @@
-from langchain_core.tools import tool
+from langchain_core.tools import StructuredTool
 from langchain_tavily import TavilySearch
 from ratelimit import limits, sleep_and_retry
 
@@ -42,7 +42,6 @@ def format_results_markdown(results: dict) -> str:
 
 @sleep_and_retry
 @limits(calls=RATE_LIMIT_CALLS, period=RATE_LIMIT_PERIOD_SECONDS)
-@tool
 def internet_search(query: str) -> str:
     """Run a Tavily web search and return markdown formatted results."""
     # Instantiate the search tool
@@ -62,3 +61,10 @@ def internet_search(query: str) -> str:
 
     # Return in markdown format
     return format_results_markdown(results)
+
+def build_web_search_tool() -> StructuredTool:
+    return StructuredTool.from_function(
+        func=internet_search,
+        name="internet_search",
+        description="Run a web search and return markdown-formatted results.",
+    )

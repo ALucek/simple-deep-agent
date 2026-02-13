@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode
@@ -13,7 +13,7 @@ from src.prompts.deepagent_prompt import (
 )
 from src.state import GraphState
 from src.tools.research_agent_tool import build_research_tool
-from src.utils import build_chat_model, last_ai_message, prepend_system_message
+from src.utils import build_chat_model
 
 
 def decide_clarification_node(
@@ -21,9 +21,7 @@ def decide_clarification_node(
 ) -> dict:
     cfg = ResearchConfig.from_runnable_config(config)
     model = build_chat_model(cfg).with_structured_output(ClarificationDecision)
-    messages = prepend_system_message(
-        state["messages"], CLARIFY_SYSTEM_PROMPT
-    )
+    messages = [SystemMessage(content=CLARIFY_SYSTEM_PROMPT), *state["messages"]]
     decision = model.invoke(messages, config=config)
     question = decision.question if decision.needs_clarification else None
     return {"clarification_question": question}
@@ -53,15 +51,18 @@ def orchestrator_node(state: GraphState, config: RunnableConfig) -> dict:
     cfg = ResearchConfig.from_runnable_config(config)
     research_tool = build_research_tool()
     model = build_chat_model(cfg).bind_tools([research_tool])
-    messages = prepend_system_message(
-        state["messages"], ORCHESTRATOR_SYSTEM_PROMPT
-    )
+    messages = [
+        SystemMessage(content=ORCHESTRATOR_SYSTEM_PROMPT),
+        *state["messages"],
+    ]
     response = model.invoke(messages, config=config)
     return {"messages": [response]}
 
 
 def route_orchestrator(state: GraphState) -> str:
-    last_message = last_ai_message(state["messages"])
+    if not state["messages"]:
+        return "end"
+    last_message = state["messages"][-1]
     if isinstance(last_message, AIMessage) and last_message.tool_calls:
         return "tools"
     return "end"
