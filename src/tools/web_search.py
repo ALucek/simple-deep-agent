@@ -1,17 +1,13 @@
-from functools import lru_cache
-
-from langchain_core.tools import StructuredTool
+from langchain_core.tools import tool
 from langchain_tavily import TavilySearch
 from ratelimit import limits, sleep_and_retry
 
 MAX_RESULTS = 5
-LRU_CACHE_MAXSIZE = 1
 AUTO_PARAMETERS = True
 RATE_LIMIT_CALLS = 100
 RATE_LIMIT_PERIOD_SECONDS = 60
 RELEVANCE_SCORE_THRESHOLD = 0
 
-@lru_cache(maxsize=LRU_CACHE_MAXSIZE)
 def _get_search_tool(
     max_results: int = MAX_RESULTS,
     auto_parameters: bool = AUTO_PARAMETERS,
@@ -46,9 +42,9 @@ def format_results_markdown(results: dict) -> str:
 
 @sleep_and_retry
 @limits(calls=RATE_LIMIT_CALLS, period=RATE_LIMIT_PERIOD_SECONDS)
+@tool
 def internet_search(query: str) -> str:
     """Run a Tavily web search and return markdown formatted results."""
-    
     # Instantiate the search tool
     search_tool = _get_search_tool()
 
@@ -66,11 +62,3 @@ def internet_search(query: str) -> str:
 
     # Return in markdown format
     return format_results_markdown(results)
-
-
-def build_web_search_tool() -> StructuredTool:
-    return StructuredTool.from_function(
-        func=internet_search,
-        name="internet_search",
-        description="Run a web search and return markdown-formatted results.",
-    )

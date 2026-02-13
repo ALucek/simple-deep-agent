@@ -109,3 +109,6 @@ config: web search category, web search basic vs advanced, web search date range
 evals (links return 200, 404 checks)
 
 configurables
+
+trade offs
+- LRU cache, overkill
