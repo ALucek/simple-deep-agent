@@ -96,6 +96,8 @@ config
 
 For tool models, why include less fields than more specifics
 
+if tavily doesnt find results, it returns a string... good to know https://smith.langchain.com/public/ed69fcd7-0d85-4c47-9692-fb3cb632ada3/r
+
 running ntoes
 - async
 
