@@ -40,7 +40,3 @@ class ResearchTask(BaseModel):
 
 class ResearchReport(BaseModel):
     content: str = Field(description="The research report content.")
-    sources: list[str] = Field(
-        default_factory=list,
-        description="Optional list of sources or citation URLs.",
-    )

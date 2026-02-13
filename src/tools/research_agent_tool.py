@@ -13,7 +13,7 @@ def _run_research_agent(query: str) -> dict:
     result = graph.invoke({"messages": [HumanMessage(content=task.query)]})
     last_message = result["messages"][-1]
     content = getattr(last_message, "content", "") or ""
-    report = ResearchReport(content=content, sources=[])
+    report = ResearchReport(content=content)
     return report.model_dump()
 
 

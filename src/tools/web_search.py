@@ -53,6 +53,9 @@ def internet_search(query: str) -> str:
     except Exception as e:
         return f"Error running search: {e}"
 
+    if not isinstance(results, dict):
+        return str(results)
+
     # Filter the results based on the relevance score threshold
     raw_results = results.get("results", [])
     results["results"] = [
