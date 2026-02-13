@@ -35,22 +35,7 @@ class ClarificationDecision(BaseModel):
 
 
 class ResearchTask(BaseModel):
-    question: str = Field(description="The research task or question to investigate.")
-    focus: str | None = Field(
-        default=None, description="Optional focus or angle to prioritize."
-    )
-    constraints: list[str] = Field(
-        default_factory=list, description="Optional constraints for the research."
-    )
-
-    def to_prompt(self) -> str:
-        lines = [f"Task: {self.question}"]
-        if self.focus:
-            lines.append(f"Focus: {self.focus}")
-        if self.constraints:
-            lines.append("Constraints:")
-            lines.extend(f"- {item}" for item in self.constraints)
-        return "\n".join(lines)
+    query: str = Field(description="The research query to investigate.")
 
 
 class ResearchReport(BaseModel):

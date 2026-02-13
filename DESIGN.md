@@ -88,6 +88,14 @@ We also want to make sure we can do everything efficiently, in parallel!
 
 Clarification rounds?
 
+discuss interrupt
+
+discuss graph and models
+structured outputs
+config
+
+For tool models, why include less fields than more specifics
+
 running ntoes
 - async
 
@@ -112,3 +120,6 @@ configurables
 
 trade offs
 - LRU cache, overkill
+
+- switch to using @tool, easier than defining a structured tool
+- had to wrap function in tool to respect the rate limiter

@@ -7,16 +7,10 @@ from src.models import ResearchReport, ResearchTask
 from src.graphs.research_graph import build_research_graph
 
 
-def _run_research_agent(
-    question: str,
-    focus: str | None = None,
-    constraints: list[str] | None = None,
-) -> dict:
-    task = ResearchTask(
-        question=question, focus=focus, constraints=constraints or []
-    )
+def _run_research_agent(query: str) -> dict:
+    task = ResearchTask(query=query)
     graph = build_research_graph()
-    result = graph.invoke({"messages": [HumanMessage(content=task.to_prompt())]})
+    result = graph.invoke({"messages": [HumanMessage(content=task.query)]})
     last_message = result["messages"][-1]
     content = getattr(last_message, "content", "") or ""
     report = ResearchReport(content=content, sources=[])
