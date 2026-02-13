@@ -114,4 +114,4 @@ def build_main_graph():
     return builder.compile()
 
 
-graph = build_main_graph()
+main_graph = build_main_graph()

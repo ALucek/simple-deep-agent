@@ -50,4 +50,4 @@ def build_research_graph():
     return builder.compile()
 
 
-graph = build_research_graph()
+research_graph = build_research_graph()
