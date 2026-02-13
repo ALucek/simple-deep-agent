@@ -1,0 +1,97 @@
+from __future__ import annotations
+
+from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.runnables import RunnableConfig
+from langgraph.graph import END, START, StateGraph
+from langgraph.prebuilt import ToolNode
+from langgraph.types import interrupt
+
+from src.models import ClarificationDecision, ResearchConfig
+from src.prompts.deepagent_prompt import (
+    CLARIFY_SYSTEM_PROMPT,
+    ORCHESTRATOR_SYSTEM_PROMPT,
+)
+from src.state import GraphState
+from src.tools.research_agent_tool import build_research_tool
+from src.utils import build_chat_model, last_ai_message, prepend_system_message
+
+
+def decide_clarification_node(
+    state: GraphState, config: RunnableConfig
+) -> dict:
+    cfg = ResearchConfig.from_runnable_config(config)
+    model = build_chat_model(cfg).with_structured_output(ClarificationDecision)
+    messages = prepend_system_message(
+        state["messages"], CLARIFY_SYSTEM_PROMPT
+    )
+    decision = model.invoke(messages, config=config)
+    question = decision.question if decision.needs_clarification else None
+    return {"clarification_question": question}
+
+
+def clarification_interrupt_node(state: GraphState) -> dict:
+    question = state.get("clarification_question")
+    if not question:
+        return {}
+    answer = interrupt({"question": question})
+    return {
+        "messages": [
+            AIMessage(content=question),
+            HumanMessage(content=str(answer)),
+        ],
+        "clarification_question": None,
+    }
+
+
+def route_after_clarification(state: GraphState) -> str:
+    if state.get("clarification_question"):
+        return "clarification_interrupt"
+    return "orchestrator"
+
+
+def orchestrator_node(state: GraphState, config: RunnableConfig) -> dict:
+    cfg = ResearchConfig.from_runnable_config(config)
+    research_tool = build_research_tool()
+    model = build_chat_model(cfg).bind_tools([research_tool])
+    messages = prepend_system_message(
+        state["messages"], ORCHESTRATOR_SYSTEM_PROMPT
+    )
+    response = model.invoke(messages, config=config)
+    return {"messages": [response]}
+
+
+def route_orchestrator(state: GraphState) -> str:
+    last_message = last_ai_message(state["messages"])
+    if isinstance(last_message, AIMessage) and last_message.tool_calls:
+        return "tools"
+    return "end"
+
+
+def build_main_graph():
+    research_tool = build_research_tool()
+    builder = StateGraph(GraphState)
+    builder.add_node("decide_clarification", decide_clarification_node)
+    builder.add_node("clarification_interrupt", clarification_interrupt_node)
+    builder.add_node("orchestrator", orchestrator_node)
+    builder.add_node("orchestrator_tools", ToolNode([research_tool]))
+
+    builder.add_edge(START, "decide_clarification")
+    builder.add_conditional_edges(
+        "decide_clarification",
+        route_after_clarification,
+        {
+            "clarification_interrupt": "clarification_interrupt",
+            "orchestrator": "orchestrator",
+        },
+    )
+    builder.add_edge("clarification_interrupt", "decide_clarification")
+    builder.add_conditional_edges(
+        "orchestrator",
+        route_orchestrator,
+        {"tools": "orchestrator_tools", "end": END},
+    )
+    builder.add_edge("orchestrator_tools", "orchestrator")
+    return builder.compile()
+
+
+graph = build_main_graph()
