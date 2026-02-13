@@ -20,7 +20,11 @@ def decide_clarification_node(
     state: GraphState, config: RunnableConfig
 ) -> dict:
     cfg = ResearchConfig.from_runnable_config(config)
-    model = build_chat_model(cfg).with_structured_output(ClarificationDecision)
+    model = build_chat_model(
+        cfg,
+        model=cfg.clarifier_model,
+        temperature=cfg.clarifier_temperature,
+    ).with_structured_output(ClarificationDecision)
     messages = [SystemMessage(content=CLARIFY_SYSTEM_PROMPT), *state["messages"]]
     decision = model.invoke(messages, config=config)
     question = decision.question if decision.needs_clarification else None
@@ -50,7 +54,11 @@ def route_after_clarification(state: GraphState) -> str:
 def orchestrator_node(state: GraphState, config: RunnableConfig) -> dict:
     cfg = ResearchConfig.from_runnable_config(config)
     research_tool = build_research_tool()
-    model = build_chat_model(cfg).bind_tools([research_tool])
+    model = build_chat_model(
+        cfg,
+        model=cfg.orchestrator_model,
+        temperature=cfg.orchestrator_temperature,
+    ).bind_tools([research_tool])
     messages = [
         SystemMessage(content=ORCHESTRATOR_SYSTEM_PROMPT),
         *state["messages"],
@@ -60,8 +68,6 @@ def orchestrator_node(state: GraphState, config: RunnableConfig) -> dict:
 
 
 def route_orchestrator(state: GraphState) -> str:
-    if not state["messages"]:
-        return "end"
     last_message = state["messages"][-1]
     if isinstance(last_message, AIMessage) and last_message.tool_calls:
         return "tools"

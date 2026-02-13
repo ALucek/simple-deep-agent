@@ -10,9 +10,38 @@ class ResearchConfig(BaseModel):
 
     model_config = ConfigDict(extra="ignore")
 
-    model: str = "gpt-5.2-2025-12-11"
-    temperature: float = 1
-    max_searches: int = 5
+    model: str = Field(
+        default="gpt-5.2-2025-12-11",
+        description="Default model for all roles if role overrides not set.",
+    )
+    temperature: float = Field(
+        default=1,
+        description="Default temperature for all roles if role overrides not set.",
+    )
+    orchestrator_model: str | None = Field(
+        default=None,
+        description="Optional model override for the orchestration agent.",
+    )
+    orchestrator_temperature: float | None = Field(
+        default=None,
+        description="Optional temperature override for the orchestration agent.",
+    )
+    clarifier_model: str | None = Field(
+        default=None,
+        description="Optional model override for the clarifying agent.",
+    )
+    clarifier_temperature: float | None = Field(
+        default=None,
+        description="Optional temperature override for the clarifying agent.",
+    )
+    researcher_model: str | None = Field(
+        default=None,
+        description="Optional model override for the research sub-agent.",
+    )
+    researcher_temperature: float | None = Field(
+        default=None,
+        description="Optional temperature override for the research sub-agent.",
+    )
 
     @classmethod
     def from_runnable_config(cls, config: dict[str, Any] | None) -> "ResearchConfig":

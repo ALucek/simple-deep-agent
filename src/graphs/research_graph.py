@@ -15,7 +15,11 @@ from src.utils import build_chat_model
 def research_agent_node(state: ResearchState, config: RunnableConfig) -> dict:
     cfg = ResearchConfig.from_runnable_config(config)
     web_search_tool = build_web_search_tool()
-    model = build_chat_model(cfg).bind_tools([web_search_tool])
+    model = build_chat_model(
+        cfg,
+        model=cfg.researcher_model,
+        temperature=cfg.researcher_temperature,
+    ).bind_tools([web_search_tool])
     messages = [
         SystemMessage(content=RESEARCH_AGENT_SYSTEM_PROMPT),
         *state["messages"],
@@ -25,8 +29,6 @@ def research_agent_node(state: ResearchState, config: RunnableConfig) -> dict:
 
 
 def route_research(state: ResearchState) -> str:
-    if not state["messages"]:
-        return "end"
     last_message = state["messages"][-1]
     if isinstance(last_message, AIMessage) and last_message.tool_calls:
         return "tools"
