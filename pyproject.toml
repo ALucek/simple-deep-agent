@@ -10,7 +10,6 @@ dependencies = [
     "langgraph>=1.0.8",
     "langgraph-cli[inmem]>=0.4.12",
     "pydantic>=2.12.5",
-    "ratelimit>=2.2.1",
 ]
 
 [dependency-groups]

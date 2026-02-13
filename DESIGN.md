@@ -96,7 +96,21 @@ config
 
 For tool models, why include less fields than more specifics
 
+Wow, in this time OpenAI changed their interface to be a countdown todo list that you can edit (send a message). Add to future improvment
+
 if tavily doesnt find results, it returns a string... good to know https://smith.langchain.com/public/ed69fcd7-0d85-4c47-9692-fb3cb632ada3/r
+
+the research agent literally send out like 200 search requests at once... a little too much encouragement -> had to implement tool handling for search with a limit
+
+5 clarification questions is a lot -> reduced to 3
+- user fatigue
+
+
+- Reports weren't really Deep or meaty upon first implementation
+
+we kinda always want depth -> remove depth related questions from clarifier
+
+started hitting 429s from tavily, need to revisit rate limiter
 
 running ntoes
 - async

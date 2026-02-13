@@ -17,3 +17,4 @@ class ResearchState(TypedDict):
     """State for the research subgraph."""
 
     messages: Annotated[list[AnyMessage], add_messages]
+    search_count: int

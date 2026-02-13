@@ -1,11 +1,8 @@
 from langchain_core.tools import StructuredTool
 from langchain_tavily import TavilySearch
-from ratelimit import limits, sleep_and_retry
 
 MAX_RESULTS = 5
 AUTO_PARAMETERS = True
-RATE_LIMIT_CALLS = 100
-RATE_LIMIT_PERIOD_SECONDS = 60
 RELEVANCE_SCORE_THRESHOLD = 0
 TOOL_DESCRIPTION = """ Internet Search Tool, takes in a natural language query and returns back relevant results + snippets from the web. 
 Usage guidelines:
@@ -45,8 +42,6 @@ def format_results_markdown(results: dict) -> str:
 
     return "\n".join(lines)
 
-@sleep_and_retry
-@limits(calls=RATE_LIMIT_CALLS, period=RATE_LIMIT_PERIOD_SECONDS)
 def internet_search(query: str) -> str:
     """Run a Tavily web search and return markdown formatted results."""
     # Instantiate the search tool

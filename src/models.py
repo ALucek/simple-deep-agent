@@ -42,6 +42,10 @@ class ResearchConfig(BaseModel):
         default=None,
         description="Optional temperature override for the research sub-agent.",
     )
+    max_searches: int = Field(
+        default=30,
+        description="Hard limit on the number of web searches per research run.",
+    )
 
     @classmethod
     def from_runnable_config(cls, config: dict[str, Any] | None) -> "ResearchConfig":
