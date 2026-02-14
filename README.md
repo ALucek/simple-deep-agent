@@ -17,7 +17,7 @@ The Simple Deep Research agent is built on the core principles of deep agents li
 2. Filters results by relevance, iterates until sufficient
 3. Returns a cited intermediate report to the orchestrator
 
-These work together 
+These work together to create a well cited and structured report in markdown format.
 
 ## Installation
 
