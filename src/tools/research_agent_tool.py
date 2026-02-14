@@ -1,4 +1,5 @@
 from langchain_core.messages import HumanMessage
+from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import StructuredTool
 
 from src.models import ResearchReport, ResearchTask
@@ -10,10 +11,11 @@ Usage guidelines:
 2. Be Specific - Research agents excel at individual topic deep dives. Avoid broad, multi-topic queries. Call this tool multiple times for different topics.
 """
 
-async def _run_research_agent(query: str) -> dict:
+async def _run_research_agent(query: str, config: RunnableConfig) -> dict:
     task = ResearchTask(query=query)
     result = await research_graph.ainvoke(
-        {"messages": [HumanMessage(content=task.query)]}
+        {"messages": [HumanMessage(content=task.query)]},
+        config=config,
     )
     last_message = result["messages"][-1]
     content = getattr(last_message, "content", "") or ""
