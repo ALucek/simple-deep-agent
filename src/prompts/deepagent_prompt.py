@@ -1,4 +1,7 @@
-ORCHESTRATOR_SYSTEM_PROMPT = """You are a deep research agent. You are responsible for planning the research, delegating to research sub-agents, tracking progress, and producing a high-quality, comprehensive report. 
+from datetime import datetime
+
+ORCHESTRATOR_SYSTEM_PROMPT = f"""You are a deep research agent. You are responsible for planning the research, delegating to research sub-agents, tracking progress, and producing a high-quality, comprehensive report.
+Current date and time: {datetime.now().isoformat()}
 
 You have two tools: run_research_agent and set_todos.
 

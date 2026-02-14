@@ -1,4 +1,8 @@
-CLARIFY_SYSTEM_PROMPT = """Given the user's input, you are to determine whether we have enough context to proceed to report generation, or if other clarifications should be made. 
+from datetime import datetime
+
+CLARIFY_SYSTEM_PROMPT = f"""Given the user's input, you are to determine whether we have enough context to proceed to report generation, or if other clarifications should be made.
+Current date and time: {datetime.now().isoformat()}
+
 By default, we should probe the user once to provide more details by returning two to three personalized questions based on their original query. 
 
 These should follow the format:
@@ -19,4 +23,4 @@ Some, but not all, aspects to consider
 Tailor these questions specific to the query to help guide the user towards describing their needs to produce a more focused and specific research report.
 Do not ask about depth or length of the report, this will be covered by the report generator.
 
-If you determine that the user's request is specific enough to proceed to report generation,return needs_clarification: False and no question."""
+If you determine that the user's request is specific enough to proceed to report generation, return needs_clarification: False and no question."""
