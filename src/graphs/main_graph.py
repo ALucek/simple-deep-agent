@@ -15,7 +15,7 @@ from src.tools.todo_list import build_todo_tool
 from src.utils import build_chat_model
 
 
-def decide_clarification_node(
+async def decide_clarification_node(
     state: GraphState, config: RunnableConfig
 ) -> dict:
     cfg = ResearchConfig.from_runnable_config(config)
@@ -25,12 +25,12 @@ def decide_clarification_node(
         temperature=cfg.clarifier_temperature,
     ).with_structured_output(ClarificationDecision)
     messages = [SystemMessage(content=CLARIFY_SYSTEM_PROMPT), *state["messages"]]
-    decision = model.invoke(messages, config=config)
+    decision = await model.ainvoke(messages, config=config)
     question = decision.question if decision.needs_clarification else None
     return {"clarification_question": question}
 
 
-def clarification_interrupt_node(state: GraphState) -> dict:
+async def clarification_interrupt_node(state: GraphState) -> dict:
     question = state.get("clarification_question")
     if not question:
         return {}
@@ -50,7 +50,7 @@ def route_after_clarification(state: GraphState) -> str:
     return "orchestrator"
 
 
-def orchestrator_node(state: GraphState, config: RunnableConfig) -> dict:
+async def orchestrator_node(state: GraphState, config: RunnableConfig) -> dict:
     cfg = ResearchConfig.from_runnable_config(config)
     research_tool = build_research_tool()
     todo_tool = build_todo_tool()
@@ -63,7 +63,7 @@ def orchestrator_node(state: GraphState, config: RunnableConfig) -> dict:
         SystemMessage(content=ORCHESTRATOR_SYSTEM_PROMPT),
         *state["messages"],
     ]
-    response = model.invoke(messages, config=config)
+    response = await model.ainvoke(messages, config=config)
     return {"messages": [response]}
 
 

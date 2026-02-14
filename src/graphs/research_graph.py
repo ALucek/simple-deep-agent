@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
@@ -7,13 +9,17 @@ from langgraph.graph import END, START, StateGraph
 from src.models import ResearchConfig
 from src.prompts.research_agent_prompt import RESEARCH_AGENT_SYSTEM_PROMPT
 from src.state import ResearchState
-from src.tools.web_search import build_web_search_tool
+from src.tools.web_search import (
+    build_tavily_tool,
+    filter_results,
+    format_results_markdown,
+)
 from src.utils import build_chat_model
 
 
-def research_agent_node(state: ResearchState, config: RunnableConfig) -> dict:
+async def research_agent_node(state: ResearchState, config: RunnableConfig) -> dict:
     cfg = ResearchConfig.from_runnable_config(config)
-    web_search_tool = build_web_search_tool()
+    web_search_tool = build_tavily_tool()
     model = build_chat_model(
         cfg,
         model=cfg.researcher_model,
@@ -23,7 +29,7 @@ def research_agent_node(state: ResearchState, config: RunnableConfig) -> dict:
         SystemMessage(content=RESEARCH_AGENT_SYSTEM_PROMPT),
         *state["messages"],
     ]
-    response = model.invoke(messages, config=config)
+    response = await model.ainvoke(messages, config=config)
     return {"messages": [response]}
 
 
@@ -34,7 +40,7 @@ def route_research(state: ResearchState) -> str:
     return "end"
 
 
-def web_search_node(state: ResearchState, config: RunnableConfig) -> dict:
+async def web_search_node(state: ResearchState, config: RunnableConfig) -> dict:
     cfg = ResearchConfig.from_runnable_config(config)
     last_message = state["messages"][-1]
     tool_calls = last_message.tool_calls or []
@@ -44,13 +50,24 @@ def web_search_node(state: ResearchState, config: RunnableConfig) -> dict:
     execute_calls = tool_calls[:remaining]
     skipped_calls = tool_calls[remaining:]
 
-    web_search_tool = build_web_search_tool()
+    web_search_tool = build_tavily_tool()
+    tasks = [
+        web_search_tool.ainvoke(call.get("args", {}))
+        for call in execute_calls
+    ]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
     tool_messages: list[ToolMessage] = []
-    for call in execute_calls:
-        result = web_search_tool.invoke(call.get("args", {}))
+    for call, result in zip(execute_calls, results):
+        if isinstance(result, Exception):
+            content = f"Error running search: {result}"
+        elif isinstance(result, dict):
+            content = format_results_markdown(filter_results(result))
+        else:
+            content = str(result)
         tool_messages.append(
             ToolMessage(
-                content=result,
+                content=content,
                 name=call.get("name", "internet_search"),
                 tool_call_id=call.get("id", ""),
             )

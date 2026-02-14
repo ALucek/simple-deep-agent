@@ -86,6 +86,11 @@ Our agent graphs are going to be relatively straightforward. We will start with 
 
 We also want to make sure we can do everything efficiently, in parallel!
 
+
+concurrency on the tool node
+
+
+
 Clarification rounds?
 
 discuss interrupt
@@ -111,6 +116,12 @@ the research agent literally send out like 200 search requests at once... a litt
 we kinda always want depth -> remove depth related questions from clarifier
 
 started hitting 429s from tavily, need to revisit rate limiter
+- rate limiting kinda overkill for a simple example, upgrade key to 1000 on API config and remove ratelimit
+
+With ratelimit on function off, we can simplify the tool constructor and handle formatting in the node, thus removing the double wrap I had of the prebuilt tool with a structuredtool
+
+custom tool node didnt support parallel like ToolNode does... hmm
+- implement quick async and maintain search limit instead
 
 running ntoes
 - async

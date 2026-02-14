@@ -1,16 +1,15 @@
-from langchain_core.tools import StructuredTool
 from langchain_tavily import TavilySearch
 
 MAX_RESULTS = 5
 AUTO_PARAMETERS = True
 RELEVANCE_SCORE_THRESHOLD = 0
-TOOL_DESCRIPTION = """ Internet Search Tool, takes in a natural language query and returns back relevant results + snippets from the web. 
+TOOL_DESCRIPTION = """Internet Search Tool, takes in a natural language query and returns back relevant results + snippets from the web.
 Usage guidelines:
 1. Use Natural Language - The search tool is designed to handle semantic queries, avoid search engine operators or specific syntax.
 2. Be Specific - Avoid broad, multi-topic queries. Call this tool multiple times for different topics.
 """
 
-def _get_search_tool(
+def build_tavily_tool(
     max_results: int = MAX_RESULTS,
     auto_parameters: bool = AUTO_PARAMETERS,
 ) -> TavilySearch:
@@ -21,7 +20,10 @@ def _get_search_tool(
         "include_raw_content": False,
         "include_answer": False,
     }
-    return TavilySearch(**kwargs)
+    tool = TavilySearch(**kwargs)
+    tool.name = "internet_search"
+    tool.description = TOOL_DESCRIPTION
+    return tool
 
 def format_results_markdown(results: dict) -> str:
     """Format search results as loose markdown for LLM input."""
@@ -42,32 +44,9 @@ def format_results_markdown(results: dict) -> str:
 
     return "\n".join(lines)
 
-def internet_search(query: str) -> str:
-    """Run a Tavily web search and return markdown formatted results."""
-    # Instantiate the search tool
-    search_tool = _get_search_tool()
-
-    # Run the search
-    try:
-        results = search_tool.invoke({"query": query})
-    except Exception as e:
-        return f"Error running search: {e}"
-
-    if not isinstance(results, dict):
-        return str(results)
-
-    # Filter the results based on the relevance score threshold
+def filter_results(results: dict) -> dict:
     raw_results = results.get("results", [])
     results["results"] = [
         r for r in raw_results if r.get("score", 0) >= RELEVANCE_SCORE_THRESHOLD
     ]
-
-    # Return in markdown format
-    return format_results_markdown(results)
-
-def build_web_search_tool() -> StructuredTool:
-    return StructuredTool.from_function(
-        func=internet_search,
-        name="internet_search",
-        description=TOOL_DESCRIPTION,
-    )
+    return results
