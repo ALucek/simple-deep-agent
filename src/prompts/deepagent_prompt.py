@@ -76,6 +76,7 @@ Rules:
 5. Place citations inline and mid-sentence where possible - attach the link directly to the claim, not at the end of the sentence
 6. Prefer linking the claim text itself (e.g. [over 1 million tokens by 2024](url)) over parenthetical references (e.g. "claim ([Source](url))")
 7. Avoid doing this style of linking with PDFs, as text fragments are not consistently supported by all PDF viewers.
+8. Avoid special characters in the URL to maintain consistency with text fragment links.
 </citation_guidelines>
 
 <report_format>
