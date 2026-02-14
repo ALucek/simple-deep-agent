@@ -28,6 +28,8 @@ There are also some stretch goals:
 - Configuration support (model, search provider, number of searches, system prompt, report structure, etc...)
 - Evals!
 
+## Initial philosophy and planning
+
 **Immediate thoughts**: Deep research is a classic example of an Agent use case, its one of the first "agentic" capabilities introduced to chat assistants post general single function/tool calling abilities like web search (RIP the bing web search API and the arms race of coupling search with specific model providers through vertex and azure). The point of deep research is to trade latency and cost for accuracy, favoring a wider and broader fan out style search to try and capture as much relevant context about the requested topic, synthesize key insights, and return back in the desired style and structure to the user. As such, our approach should not disregard latency (or cost!), but users of deep research systems tend to expect this tradeoff up front. 
 
 The report style and topic was left general, so our agent must broadly support general queries and open requests (i.e. structure, format, other desired personalizations to the output that a user may request in the prompt). This doesn't _complicate_ things per se, but it would make evaluating performance downstream a little more difficult. It's easier to say, verify a deep research system that is meant to follow a strict format and information gathering style/defined aspects (E.g. a system that would take in a list of companies, perform comprehensive research, and output the same briefing for each). Keeping our deep research agent's focus and support broad adds some subjectivity and widens possible expectations from users. Not an issue but would want to keep an eye on output feedback as defining quality and accuracy to a broad use case will depend on usage trends that we will not be able to capture immediately here.
@@ -80,11 +82,23 @@ We'll also shift our approach to avoid the raw content. A quick check of how man
 
 As a note, one of our goals is to limit the amount of times a piece of retrieved content is processed, i.e. reingested or restated by an LLM. I've found that constantly reviewing or summarizing can flatten the actual useful information/exacts that we want to be grounded in the retrieved context. This will additionally help us with implementing inline text fragment links.
 
-## Graphs
+### Graphs
 
 Our agent graphs are going to be relatively straightforward. We will start with the user input, this input will be passed to a node that invokes an LLM to ask some clarifying questions (human in the loop style interrupt), the user will type in a response and the graph should either resume from that checkpoint with the additional message inserted, or the clarifying LLM should be able to determine when to kick off the deep research sub graph. The deep research sub graph will follow a standard ReACT setup and have the ability to invoke multiple research agents. In considering the method of invocation, we will rely on tool calling here rather than something like `Send()` to allow a more loose flow. `Send()` would be useful if we wanted a more linear graph but we want to rely on the intelligence of the model to determine if it has adequate information or not. We can also be a little more specific than implementations like deepagents take with the `task` tool as we only have one expected sub agent type. This sub agent will then have the web search tool available to perform said research. It will perform some number of web searches, create an intermediate cited report as a response, and return this back to the orchestrating LLM. 
 
 We also want to make sure we can do everything efficiently, in parallel!
+
+## Findings from the Future
+
+Following the philosophy and general outline of thinking here, we proceeded to iterate and implement.
+
+The web search tool was defined first, 
+
+
+
+- the built in tool node supports concurrency, when trying to define my own tool node to limit the amount of web search calls per run I discovered this as my search results were sequential. 
+    - Switched everything over to async
+
 
 
 concurrency on the tool node
@@ -132,14 +146,24 @@ Future ideas
 - Finding similar queries/reports and displaying to not duplicate
 - filesystem integration
 - Different web search provider
-- direct text link highlighting (text fragments)
 - image handling
 - Text fragments for PDF file types 
+- Tools decoupled as MCP
+- Tools decoupled as Skills
+- Configurable web search parameters
+- configurable web search providers
+- support for other llm providers
 
-web search, full text vs highlights
+optimizations
+- handle invalid tool mixes, i.e. if the tool call is a todo list AND sub agents.
+- retry policy
+- global rate limiting
 
-other considerations, mcp skills etc
+
+
 config: web search category, web search basic vs advanced, web search date range/filter, 
+
+
 
 evals (links return 200, 404 checks)
 
@@ -150,3 +174,4 @@ trade offs
 
 - switch to using @tool, easier than defining a structured tool
 - had to wrap function in tool to respect the rate limiter
+- Wasted my time trying to implement rate limiting

@@ -69,11 +69,10 @@ def route_orchestrator(state: GraphState) -> str:
     last_message = state["messages"][-1]
     if not isinstance(last_message, AIMessage) or not last_message.tool_calls:
         return "end"
-    tool_call = last_message.tool_calls[0]
-    tool_name = tool_call.get("name")
-    if tool_name == "run_research_agent":
+    tool_names = {call.get("name") for call in last_message.tool_calls}
+    if tool_names == {"run_research_agent"}:
         return "research_agent"
-    if tool_name == "set_todos":
+    if tool_names == {"set_todos"} and len(last_message.tool_calls) == 1:
         return "todo_list"
     return "end"
 
