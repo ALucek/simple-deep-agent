@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import Literal
 
 from langchain_core.tools import StructuredTool
@@ -13,7 +11,7 @@ Usage guidelines:
 """
 
 class TodoItem(BaseModel):
-    description: str = Field(description="Short description of the todo.")
+    description: str = Field(description="Description of the todo.")
     progress: Literal["completed", "in progress", "outstanding"] = Field(
         description="Progress status for the todo item."
     )
