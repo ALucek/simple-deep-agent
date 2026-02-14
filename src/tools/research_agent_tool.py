@@ -4,7 +4,7 @@ from langchain_core.messages import HumanMessage
 from langchain_core.tools import StructuredTool
 
 from src.models import ResearchReport, ResearchTask
-from src.graphs.research_graph import build_research_graph
+from src.graphs.research_graph import research_graph
 
 RESEARCH_AGENT_TOOL_DESCRIPTION = """Run a focused research sub-agent that will perform comprehensive web searches and return a structured report. 
 Usage guidelines:
@@ -14,8 +14,9 @@ Usage guidelines:
 
 async def _run_research_agent(query: str) -> dict:
     task = ResearchTask(query=query)
-    graph = build_research_graph()
-    result = await graph.ainvoke({"messages": [HumanMessage(content=task.query)]})
+    result = await research_graph.ainvoke(
+        {"messages": [HumanMessage(content=task.query)]}
+    )
     last_message = result["messages"][-1]
     content = getattr(last_message, "content", "") or ""
     report = ResearchReport(content=content)

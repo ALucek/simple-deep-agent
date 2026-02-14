@@ -91,18 +91,15 @@ async def web_search_node(state: ResearchState, config: RunnableConfig) -> dict:
     }
 
 
-def build_research_graph():
-    builder = StateGraph(ResearchState)
-    builder.add_node("research_agent", research_agent_node)
-    builder.add_node("web_search", web_search_node)
-    builder.add_edge(START, "research_agent")
-    builder.add_conditional_edges(
-        "research_agent",
-        route_research,
-        {"tools": "web_search", "end": END},
-    )
-    builder.add_edge("web_search", "research_agent")
-    return builder.compile()
+builder = StateGraph(ResearchState)
+builder.add_node("research_agent", research_agent_node)
+builder.add_node("web_search", web_search_node)
+builder.add_edge(START, "research_agent")
+builder.add_conditional_edges(
+    "research_agent",
+    route_research,
+    {"tools": "web_search", "end": END},
+)
+builder.add_edge("web_search", "research_agent")
 
-
-research_graph = build_research_graph()
+research_graph = builder.compile()

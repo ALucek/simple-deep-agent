@@ -80,38 +80,36 @@ def route_orchestrator(state: GraphState) -> str:
     return "end"
 
 
-def build_main_graph():
-    research_tool = build_research_tool()
-    todo_tool = build_todo_tool()
-    builder = StateGraph(GraphState)
-    builder.add_node("decide_clarification", decide_clarification_node)
-    builder.add_node("clarification_interrupt", clarification_interrupt_node)
-    builder.add_node("orchestrator", orchestrator_node)
-    builder.add_node("research_agent", ToolNode([research_tool]))
-    builder.add_node("todo_list", ToolNode([todo_tool]))
+research_tool = build_research_tool()
+todo_tool = build_todo_tool()
 
-    builder.add_edge(START, "decide_clarification")
-    builder.add_conditional_edges(
-        "decide_clarification",
-        route_after_clarification,
-        {
-            "clarification_interrupt": "clarification_interrupt",
-            "orchestrator": "orchestrator",
-        },
-    )
-    builder.add_edge("clarification_interrupt", "decide_clarification")
-    builder.add_conditional_edges(
-        "orchestrator",
-        route_orchestrator,
-        {
-            "research_agent": "research_agent",
-            "todo_list": "todo_list",
-            "end": END,
-        },
-    )
-    builder.add_edge("research_agent", "orchestrator")
-    builder.add_edge("todo_list", "orchestrator")
-    return builder.compile()
+builder = StateGraph(GraphState)
+builder.add_node("decide_clarification", decide_clarification_node)
+builder.add_node("clarification_interrupt", clarification_interrupt_node)
+builder.add_node("orchestrator", orchestrator_node)
+builder.add_node("research_agent", ToolNode([research_tool]))
+builder.add_node("todo_list", ToolNode([todo_tool]))
 
+builder.add_edge(START, "decide_clarification")
+builder.add_conditional_edges(
+    "decide_clarification",
+    route_after_clarification,
+    {
+        "clarification_interrupt": "clarification_interrupt",
+        "orchestrator": "orchestrator",
+    },
+)
+builder.add_edge("clarification_interrupt", "decide_clarification")
+builder.add_conditional_edges(
+    "orchestrator",
+    route_orchestrator,
+    {
+        "research_agent": "research_agent",
+        "todo_list": "todo_list",
+        "end": END,
+    },
+)
+builder.add_edge("research_agent", "orchestrator")
+builder.add_edge("todo_list", "orchestrator")
 
-main_graph = build_main_graph()
+main_graph = builder.compile()
