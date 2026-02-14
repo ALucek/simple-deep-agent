@@ -72,7 +72,7 @@ def route_orchestrator(state: GraphState) -> str:
     tool_names = {call.get("name") for call in last_message.tool_calls}
     if tool_names == {"run_research_agent"}:
         return "research_agent"
-    if tool_names == {"set_todos"} and len(last_message.tool_calls) == 1:
+    if tool_names == {"set_todos"}:
         return "todo_list"
     return "end"
 
