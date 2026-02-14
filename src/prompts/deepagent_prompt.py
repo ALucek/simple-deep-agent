@@ -77,6 +77,7 @@ Rules:
 6. Prefer linking the claim text itself (e.g. [over 1 million tokens by 2024](url)) over parenthetical references (e.g. "claim ([Source](url))")
 7. Avoid doing this style of linking with PDFs, as text fragments are not consistently supported by all PDF viewers.
 8. Avoid special characters in the URL to maintain consistency with text fragment links.
+9. Don't number sections, use descriptive titles instead.
 </citation_guidelines>
 
 <report_format>
@@ -86,7 +87,7 @@ Your final report must be in markdown. It should be long and comprehensive — c
 
 [Introduction: 20-30 sentences framing the topic, why it matters, and the scope of the report. Ground claims in citations even here.]
 
-## [Section Title]
+## [Descriptive Section Title]
 
 [Opening paragraph(s) for this section providing context and framing, with inline citations. 15-20 sentences minimum.]
 
