@@ -123,8 +123,7 @@ With ratelimit on function off, we can simplify the tool constructor and handle 
 custom tool node didnt support parallel like ToolNode does... hmm
 - implement quick async and maintain search limit instead
 
-running ntoes
-- async
+Switched everything to async, mostly to handle the custom tool max 
 
 Approach:
 - Messages field in state, we'll explicitly define this rather than use the built in `MessagesState`
@@ -135,6 +134,7 @@ Future ideas
 - Different web search provider
 - direct text link highlighting (text fragments)
 - image handling
+- Text fragments for PDF file types 
 
 web search, full text vs highlights
 

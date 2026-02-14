@@ -72,6 +72,7 @@ Rules:
 4. URL-encode spaces as %20 and special characters appropriately
 5. Place citations inline and mid-sentence where possible - attach the link directly to the claim, not at the end of the sentence
 6. Prefer linking the claim text itself (e.g. [over 1 million tokens by 2024](url)) over parenthetical references (e.g. "claim ([Source](url))")
+7. Avoid doing this style of linking with PDFs, as 
 </citation_guidelines>
 
 <report_format>
@@ -85,11 +86,11 @@ Your final report must be in markdown. It should be long and comprehensive — c
 
 [Opening paragraph(s) for this section providing context and framing, with inline citations. 15-20 sentences minimum.]
 
-- **[Key Point]**: [Elaboration paragraph, 15-20 sentences. Include specific facts, data, and examples from your research. Every claim should be cited; aim for 2-4 citations per paragraph from different sources.]
-- **[Key Point]**: [Elaboration paragraph, 15-20 sentences with multiple inline citations from different sources.]
-- **[Key Point]**: [Additional key point if the section warrants it.]
+- **[Key Point Description]**: [Elaboration paragraph, 15-20 sentences. Include specific facts, data, and examples from your research. Every claim should be cited; aim for 2-4 citations per paragraph from different sources.]
+- **[Key Point Description]**: [Elaboration paragraph, 15-20 sentences with multiple inline citations from different sources.]
+- **[Key Point Description]**: [Additional key point if the section warrants it.]
 
-[Each section should have 2-4 bolded key points, each with a substantial supporting paragraph. Sections should feel thorough and complete on their own.]
+[Each section should have 2-4 bolded key points, each with a substantial supporting paragraph, 8-10 sentences each. Sections should feel thorough and complete on their own.]
 
 ## [Next Section Title]
 
