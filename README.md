@@ -17,7 +17,7 @@ The Simple Deep Research agent is built on the core principles of deep agents li
 2. Filters results by relevance, iterates until sufficient
 3. Returns a cited intermediate report to the orchestrator
 
-These work together to create a well cited and structured report in markdown format.
+These work together to create a well cited and structured report in markdown format, an example output can be [viewed here](/examples/report.md)
 
 ## Installation
 
@@ -49,6 +49,40 @@ The Simple Deep Research agent connects to the web via [Tavily](https://www.tavi
 
 [LangSmith](https://smith.langchain.com/) is used for tracing and the Studio IDE. This implementation integrates directly with LangSmith, it is reccomended to interact and view the agent graphs via LangSmith Studio.
 
+## Using Locally
+
+The Simple Deep Research graphs can be used directly for custom integrations. When using directly, it is important to respect [checkpointing](https://docs.langchain.com/oss/python/langgraph/persistence) and thread handling as we rely on [interrupts](https://docs.langchain.com/oss/python/langgraph/interrupts) for human-in-the-loop clarification of research scope.
+
+A simplified example of how this can be implemented is provided in [examples/run_agent.py](examples/run_agent.py). Run via
+
+```
+uv run examples/run_agent.py
+```
+
+The research sub agent can also be used independentally. For example:
+
+```python
+import asyncio
+import uuid
+
+from langchain_core.messages import HumanMessage
+from langgraph.checkpoint.memory import InMemorySaver
+
+from src.graphs.research_graph import builder
+
+graph = builder.compile(checkpointer=InMemorySaver())
+config = {"configurable": {"thread_id": str(uuid.uuid4())}}
+
+result = asyncio.run(
+    graph.ainvoke(
+        {"messages": [HumanMessage(content="Research top trends in edge AI.")]},
+        config,
+    )
+)
+
+print(result["messages"][-1].content)
+```
+
 ## Using LangSmith Studio
 
 To initiate the Simple Deep Research agent in LangSmith Studio, launch the local langgraph server via the command:
@@ -66,14 +100,4 @@ This contains the core flow and logic for the Simple Deep Research agent. In the
 <img src="./media/sub_agent.png" width=600>
 
 This contains the research sub agent graph responsible for searching the web.
-
-## Using Locally
-
-The Simple Deep Research graphs can be used directly for custom integrations. When using directly, it is important to respect [checkpointing](https://docs.langchain.com/oss/python/langgraph/persistence) and thread handling as we rely on [interrupts](https://docs.langchain.com/oss/python/langgraph/interrupts) for human-in-the-loop clarification of research scope.
-
-A simplified example of how this can be implemented is provided in [examples/run_agent.py](examples/run_agent.py). Run via
-
-```
-uv run examples/run_agent.py
-```
 
