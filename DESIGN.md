@@ -1,44 +1,16 @@
 # DESIGN.md
 
-So the goal is to create a deep research implementation for report generation grounded in web search. My language of choice for this will be **python**
-
-Theres a couple criterium upon which this agent will be judged, from the spec I see:
-- Code quality
-- Report structure & generation quality
-- Communication of ideas (_"talk through any questions or ideas you have for performance improvements"_)
-    - Assumption that this will be covered partially by the design document, and partially by any live discussion/walkthrough
-
-There are some explicitly defined requirements as well, some pertaining to the overall task some to the agent:
-- It should have a `messages` field in state
-    - This will handle both the user messages and assistant messages, with the final answer being returned as an assistant message (as opposed to the report being stored in a seperate field in the state, filesystem, store, etc etc)
-    - Can optionally include other relevant internally generated messages, either directly in the messages field or seperate fields
-- Users should be able to pass in a query and be returned back a report grounded in context from the web
-- It should use web search APIs to gather context for the report
-    - with some recs around tavily (now part of nebius!), exa, or SerpAPI
-- This `DESIGN.md` doc that outlines my thought process in designing the agent.
-    - This should operate as a brain dump, some ideas of what to include are what did i try with successes/failures, how these successes/failures influenced changes
-    - Acknowledgement of shortcomings/time limitations, outlined fixes if not under time pressure.
-    - Future features and improvements/optimizations
-    - Any other ways you want to use 
-- public Github repository containing the code
-- `README.md` with instructions on setup and run locally
-- Optionally setup with LangSmith studio, and screenshot of the graph from LangSmith Studio
-
-There are also some stretch goals:
-- Configuration support (model, search provider, number of searches, system prompt, report structure, etc...)
-- Evals!
-
 ## Initial philosophy and planning
 
 **Immediate thoughts**: Deep research is a classic example of an Agent use case, its one of the first "agentic" capabilities introduced to chat assistants post general single function/tool calling abilities like web search (RIP the bing web search API and the arms race of coupling search with specific model providers through vertex and azure). The point of deep research is to trade latency and cost for accuracy, favoring a wider and broader fan out style search to try and capture as much relevant context about the requested topic, synthesize key insights, and return back in the desired style and structure to the user. As such, our approach should not disregard latency (or cost!), but users of deep research systems tend to expect this tradeoff up front. 
 
 The report style and topic was left general, so our agent must broadly support general queries and open requests (i.e. structure, format, other desired personalizations to the output that a user may request in the prompt). This doesn't _complicate_ things per se, but it would make evaluating performance downstream a little more difficult. It's easier to say, verify a deep research system that is meant to follow a strict format and information gathering style/defined aspects (E.g. a system that would take in a list of companies, perform comprehensive research, and output the same briefing for each). Keeping our deep research agent's focus and support broad adds some subjectivity and widens possible expectations from users. Not an issue but would want to keep an eye on output feedback as defining quality and accuracy to a broad use case will depend on usage trends that I will not be able to capture immediately here.
 
-Deep research agents within chat experiences these days also tend to be seperate processes, in other words the interaction and request in the chat kicks off a seperate deep research "job" that executes and you can continue the chat conversation while that is in progress. The purpose of this assessment is to create the deep research agent part of this, thus I will make the assumption that this will operate as the report generation engine, rather than chat assistant. We can table then more chat assistant focused features like explicit interaction memory and prompting quirks/context injection for encouraging helpful behavior in an applied domain that would be expected for chat, but aren't immediately necessary for report generation. 
+Deep research agents within chat experiences these days also tend to be seperate processes, in other words the interaction and request in the chat kicks off a seperate deep research "job" that executes and you can continue the chat conversation while that is in progress. The purpose of this is to create the deep research agent part of this, thus I will make the assumption that this will operate as the report generation engine, rather than chat assistant. We can table then more chat assistant focused features like explicit interaction memory and prompting quirks/context injection for encouraging helpful behavior in an applied domain that would be expected for chat, but aren't immediately necessary for report generation. 
 
 The purpose of this is then also to keep things "simple". As such, I'll table features unrelated to designing and implementing the core report generation engine, such as deployment/infra, frontend/UX, persistent storage, etc. 
 
-With this I can explicitly outline some out of scope features that could be cool to explore either in the future or as part of a complete system.
+With this I can explicitly outline some larger out of scope features that could be cool to explore either in the future or as part of a complete system.
 
 Out of scope
 - Optimizing chat assistant related behavior
@@ -102,6 +74,8 @@ The web search tool was defined first, and evolved a few times over the course o
 - Gave some consideration to tool instantiation, my original had a search tool every search invocation, considered some optimizations like LRU cache
     - eventually ended up instantiating the tool within each node later on. Gains of optimizing this with something like a global tool not worth the headache rn, especially for a high "latency" system thats going to take 5 mins anyway
 - For simplicity's sake, hardcoded values. Future improvements could be made with making this configurable and tuning the various parameters
+- To keep things simple, it will only take in a query without any additional model-defined parameters
+    - Worth exploring exposing some additional KWARGs for the LLM to pop into a search query like date filtering, topic filtering, etc.
 
 I then proceeded to build the core graph to build on deciding on a few specific choices:
 1. I will implement the clarification step as an LLM call and an interrupt node
@@ -111,88 +85,134 @@ I then proceeded to build the core graph to build on deciding on a few specific 
 - I created two states, one for the main orchestrator and one for the research agent, these explicitly define a messages field with an `add_messages` reducer 
     - This was mostly to support the requirement from the spec, could be simplified with a `MessagesState` but better safe than sorry
 - I considered what additional fields would be needed
-    - Personally, I think the most elegant implementation of agents involves relying on a straightforward historical list of messages, opposed to handling extra variables in state values and injecting them at different points. Obviously, this is mostly for context handling. There are plenty reasons you'd want to keep additional info in state, such as to hold a count of web searches for limiting, which I ended up doing with my research sub graph. 
+    - Personally, I think an elegant implementation of agent context handling involves relying on a straightforward historical list of messages, opposed to handling extra variables in state values and injecting them at different points. Obviously, this is mostly for context handling and not true all the time, but wanted to keep things consistent for this implementation. There are plenty reasons you'd want to keep additional info in state, such as to hold a count of web searches for limiting, which I ended up doing with my research sub graph, or other processing logic
+- Also, decided may as well implement config handling for the models as it wasn't much overhead to inject, added values to specify model and temperature for the three various LLM 'roles' you'll interact with.
+    - For the sake of time and complexity, kept config low, plenty opportunity as mentioned in the web search tool to add more configurations, split them out into seperate ones, etc for both the models, interactions, so on, so forth.
+- I decided to use structured outputs with defined models to ensure consistency and reliability, as tends to be standard.
+    - Defined via pydantic so we can use all the other features of the package if needed
+- Model instantiation is using OpenAI as this is the provided API key, future considerations for additional model provider support
 
+As for the nodes and edges, these followed much of the outlined philosophy. We initiate the main graph which immediately goes to a clarification node with the user's input. 
+- We instantiate a model with the clarification system prompt and state message history
+    - We allow the full message history as multiple clarifications may be necessary
+- This hits a conditional edge where if the model has determined that we need clarification, we return the question and hit an `interrupt`. This conveniently checkpoints and pauses our graph while we insert a new value, which ends up being added to the message history along with the AI's clarifying question
+    - `interrupt` is nice here as it handles all checkpointing and resuming so we don't have to deal with threads, ids, and resuming checkpoints manually. 
+- This is returned back to the clarifying node where the model can run it back with more questions, or pass to the orchestrator by returning `None` in the question
 
+To fully implement the the orchestrator we need the research sub agent graph defined and invokable as a tool.
 
+The initial implementation of this was a simple research agent node and ToolNode with web search. As we got into testing, this needed to be evolved for a few reasons:
+- In one of the original naive implementations, the model literally spent like 5 minutes generating what appears to be over 100 parallel web searches for some ridiculous reason https://smith.langchain.com/public/60f3bcaf-b3d6-4f53-84af-1f76d5c5df8e/r
+    - So obviously we were not going let that just happen, thus had to redesign a custom web_search_node to handle our web tool invocations 
+    - Also if Tavily literally doesn't find any results it returns a string rather than a dict, so had to handle that https://smith.langchain.com/public/ed69fcd7-0d85-4c47-9692-fb3cb632ada3/r
+    - This did break the parallelization that the ToolNode has built in, so had to switch to async handling. While we were here went ahead and converted everything for posterities sake in the nodes as we want the research agents to be able to be ran in parallel anyway and we can get some efficiency gains/reduce latency
+    - This allows allows us to implement the max limit logic, where we check our config and return a warning toolmessage instead of executing additional tool calls
+- But with these kinks ironed out, the rest is straightforward agent -> web search -> execute -> return -> more or generate and end
 
+With our sub graph defined, we needed a way to package it into a callable tool
+- This was a lot easier to handle as we just pop the graph in a function with a query (the generated instructions from the orchestrator calling the tool) passed as a human message, which we further bundle as a StructuredTool from a function.
 
+This can be connected to the orchestrator within a ToolNode nicely, so we do that and then conditional between it and end.
 
+With the initial stage out the prompting came next, one for each role of the LLM
+- The clarifier simply has instructions to take in the query and generate 2-3 followup questions (although it likes to ere on the side of 3 always).
+    - I originally said 5, but thats a horrible user experience to answer 5 long questions
+    - Also had to stop it from asking about depth/format as this would be covered in the orchestrator prompting
+- As always we provide instructions on what to return along with an outline example.
+- The research agent has a more interesting prompt and required a few explicit instructions
+    - Search query guidelines since it kept running search engine filter queries like "site:reddit.com" etc when it should be natural language
+    - Avoid multiple topics in a single query, split them into individual runs
+    - Don't use the search tool 200 times please (although this is enforced its nice to be explicit)
+    - Then two good behavioral examples and a bad example.
+    - **Importantly**, we also take this time to implement text fragment URL linking with sources. This will allow all claims and sources to link directly to and highlight the text on the page when clicked through. I've found users love this function as they would rather not find the exact citation themselves, and for large/non text content it can be difficult to find where insights are pulled from if not direcly noted.
+    - We reinforce this behavior with explicit rules
+    - For verbosity and completeness, we request minimum 5 paragraphs of 20 sentences. Needed to specify exacts as the models err on the side of less if not
+- The orchestrator prompt is the main "program" of the agent, so a little more goes in with:
+    - instructions on how to call the research agent, mostly around parallel tool calling and not asking a research agent to do multiple topics at once
+    - behavior examples to encourage specific flow, examples of good behavior and bad behavior outlined
+    - The same citation instructions as the sub agent to propogate those links through
+    - Report format, which encourages the style and verbosity of the report. These instructions are mostly focused around styling a report similar to those returned by ChatGPT tool.
+        - The format took a while to tune, the model tended to make very short and choppy lists unless explicitly prompted with sentence requirements. Also noticed PDFs don't equally handle text fragment based citations so instructions.
+- Across all of these also added date/time so they don't keep thinking theyre in 2024
+- One bug that came up was the markdown formatting breaking, this was identified as the ~ character being used for approximation, which caused strikethroughs to render and break text fragment linking, prompt was updated to reflect 
 
-concurrency on the tool node
+This got us closer to an ideal behavior, but the system still suffered from not going too deep, the orchestrator would kick off a couple sub agents then generate a report. So decided to also implement the todo list tool to the orchestrator
+- As we understand these days, the todo list tool isn't meant to actually do anything but rather keep the model consistently reflecting on some workflow that it defines. 
+- This implementation is very similar to other implementations in that we offer a list of todos that the model creates with a description and status, and instructions in the prompt were added to encourage frequent usage and show examples.
+    - We implement this as a seperate tool node on the graph for a few key reasons
+    - We want to encourage the model choosing either the sub agents OR interacting with the todos explicitly. This is intended so that we have an isolated planning stage that the llm works through before taking an action/subsequent action
+    - We don't want parallel todo list calls as it would be either redundant or unnecessary. The intended flow is to plan, act, observe, then update the plan (todo list)
+    - But seeing as this is a noop tool the implementation is relatively straightforward in code, further defined through the prompt. Further optimization could happen by explicitly restricting to 1 call and returning some error message
 
+And with all these various iterations and findings, we land on a working deep agent implementation, you can see an example here:
 
+Initial message and first interrupt: https://smith.langchain.com/public/00194993-eb6f-4012-8e64-58924578594d/r
+Second interrupt: https://smith.langchain.com/public/c4eed224-e071-4c5c-91dc-0295bf016aa8/r
+Main Report Generation: https://smith.langchain.com/public/c11641ff-0516-4f8b-b161-2066b70a9734/r
 
-Clarification rounds?
+Which produced [the report here](/examples/report.md)
 
-discuss interrupt
+## thoughts/future/optimizations
 
-discuss graph and models
-structured outputs
-config
+model choice - I default to OpenAI's models due to the provided resources, using gpt 5.2 as our all around model. OpenAI's tone and voice is relatively lacking, would likely use an Anthropic model like Opus for a more lively report read. 5.2 also has some quirks on tool calling, tends to try and compact actions and minimize tool calling, unlike gpt 5 which loves to fire off a tool. Some considerations of models with a higher tendency for tool calling in the tool calling heavy roles like the orchestrator, then those with less tendency for the sub agents, where we can somewhat take advantage of conservative tool calling to limit expensive actions like web search.
 
-For tool models, why include less fields than more specifics
+Supervisor, revisor, etc - As mentioned earlier, I've found that adding additional reviews and transformations of the text across llms tends to flatten the information. The use of sub agents for context management is a great trick to distill and then synthesize with a supervisor keeps text closer to the user. 
 
-Wow, in this time OpenAI changed their interface to be a countdown todo list that you can edit (send a message). Add to future improvment
-
-if tavily doesnt find results, it returns a string... good to know https://smith.langchain.com/public/ed69fcd7-0d85-4c47-9692-fb3cb632ada3/r
-
-the research agent literally send out like 200 search requests at once... a little too much encouragement -> had to implement tool handling for search with a limit
-
-5 clarification questions is a lot -> reduced to 3
-- user fatigue
-
-
-- Reports weren't really Deep or meaty upon first implementation
-
-I kinda always want depth -> remove depth related questions from clarifier
-
-started hitting 429s from tavily, need to revisit rate limiter
-- rate limiting kinda overkill for a simple example, upgrade key to 1000 on API config and remove ratelimit
-
-With ratelimit on function off, I can simplify the tool constructor and handle formatting in the node, thus removing the double wrap I had of the prebuilt tool with a structuredtool
-
-custom tool node didnt support parallel like ToolNode does... hmm
-- implement quick async and maintain search limit instead
-
-Switched everything to async, mostly to handle the custom tool max 
-
-Approach:
-- Messages field in state, we'll explicitly define this rather than use the built in `MessagesState`
-
-Future ideas
-- Finding similar queries/reports and displaying to not duplicate
+Some future direction ideas to try
+- Finding similar queries/reports and displaying to not duplicate work (i.e. some memory system)
 - filesystem integration
-- Different web search provider
-- image handling
+- Different web search provider(s)
+- image handling, both understanding and placing in line with report
 - Text fragments for PDF file types 
 - Tools decoupled as MCP
 - Tools decoupled as Skills
 - Configurable web search parameters
 - configurable web search providers
+- More configuration in general for all knobs
 - support for other llm providers
+- Implement functionalities using middleware framework
+- OpenAI's new editable todo list kickoff rather than an LLM clarifier
+- Whether additional reviewer steps are worth it
 
-
-
-optimizations
+Some known optimizations to the current implementation:
 - handle invalid tool mixes, i.e. if the tool call is a todo list AND sub agents.
+    - warning message returned via a tool message from a new node
 - retry policy
-- global rate limiting
-- Limit clarifications explicitly
+    - Add to LLM models and nodes if noticing failures
+- global rate limiting for web search
+    - create an async rate limiter, attach to the tool (would need to be more custom than my initial try)
+- Limit clarifications explicitly (often asks twice)
+    - either via prompting, or pass the interrupt to the orchestrator directly
 - tune relevancy score
+    - Assess if search results are getting cut off that ARE relevant and tune
+- Link format checking and consistency
+    - extract and match against patterns to ensure formatting is right
+- text fragments on reactive pages
+    - I fear this may be a per page and how it handles highlighting issue
+- Explicit handling of tildes that break markdown formatting 
+    - run a check and replace for out place tildes
 
+## Evals
 
-config: web search category, web search basic vs advanced, web search date range/filter, 
+When making a quick dataset to try some evals out, were able to perform some error analysis. Two quick bug fixes came out from this, namely:
+- Section titles being numbered (looked bad)
+- Some verbosity issues and formatting (i.e. not long enough)
+- markdown breaking with strikethroughs via the tilde, more pressing
 
+Pushed prompt updates for these, but also worthwhile adding in some explicit evaluators for these. For the sake of time we won't do a full eval implementation, but these would be useful:
+- Function for assessing stray tildes outside of text fragments
+- Function for checking for list numbers in headers
+- Structure adherence - LLM as a Judge
+- Verbosity - Either length or LLM as a Judge
+- Link fromatting consistency - Funtion to match markdown format
+- Check links for 200/404, sometimes models mess up characters in links due their complicated strings. Could extract and explicitly check to make sure the model is accurate.
+- search tool object count - if we continue to see small searches maybe our threshold of relevance is too strict
+- Pairwise for testing various model(s) and their performance
+...
+- User preferences, further quirks surfaced as we observe behavior
 
+I have a larger philosophy on evaluations that I've written up here: https://lucek.ai/blogs/llm-evaluations
 
-evals (links return 200, 404 checks)
+---
 
-configurables
-
-trade offs
-- LRU cache, overkill
-
-- switch to using @tool, easier than defining a structured tool
-- had to wrap function in tool to respect the rate limiter
-- Wasted my time trying to implement rate limiting
+Thanks for reading my design brain dump!
