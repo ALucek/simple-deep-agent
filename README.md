@@ -28,7 +28,7 @@ git clone https://github.com/ALucek/simple-deep-research
 cd simple-deep-research
 ```
 
-2. Install depencies:
+2. Install dependencies:
 
 ```bash
 uv sync
@@ -47,7 +47,7 @@ LANGSMITH_PROJECT="simple-deep-research"
 
 The Simple Deep Research agent connects to the web via [Tavily](https://www.tavily.com/). Tavily generously provides 1,000 free API credits per month, usage and API keys can be created in the [overview page](https://app.tavily.com/home).
 
-[LangSmith](https://smith.langchain.com/) is used for tracing and the Studio IDE. This implementation integrates directly with LangSmith, it is reccomended to interact and view the agent graphs via LangSmith Studio.
+[LangSmith](https://smith.langchain.com/) is used for tracing and the Studio IDE. This implementation integrates directly with LangSmith, it is recommended to interact and view the agent graphs via LangSmith Studio.
 
 ## Using Locally
 
@@ -59,7 +59,7 @@ A simplified example of how this can be implemented is provided in [examples/run
 uv run examples/run_agent.py
 ```
 
-The research sub agent can also be used independentally. For example:
+The research sub agent can also be used independently. For example:
 
 ```python
 import asyncio
@@ -101,3 +101,6 @@ This contains the core flow and logic for the Simple Deep Research agent. In the
 
 This contains the research sub agent graph responsible for searching the web.
 
+<img src="./media/ls_studio.png" width=600>
+
+The graphs can then be interacted with directly in the interface!
