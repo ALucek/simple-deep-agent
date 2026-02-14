@@ -2,7 +2,7 @@ from langchain_tavily import TavilySearch
 
 MAX_RESULTS = 5
 AUTO_PARAMETERS = True
-RELEVANCE_SCORE_THRESHOLD = 0
+RELEVANCE_SCORE_THRESHOLD = 0.7
 TOOL_DESCRIPTION = """Internet Search Tool, takes in a natural language query and returns back relevant results + snippets from the web.
 Usage guidelines:
 1. Use Natural Language - The search tool is designed to handle semantic queries, avoid search engine operators or specific syntax.
