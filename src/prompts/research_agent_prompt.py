@@ -47,9 +47,9 @@ This highlights the exact sentence or passage on the page when the reader clicks
 Citation format: Use markdown inline links with the text fragment appended. Weave citations into the middle of sentences alongside the specific claim they support, not just at the end.
 
 Example - Inline citation woven into prose:
-The rapid growth of context windows from 512 tokens in 2018 to [over 1 million tokens by 2024](https://www.meibel.ai/post/understanding-the-impact-of-increasing-llm-context-windows#:~:text=Context%20windows%20have%20grown%20exponentially,1%20million%20token%20context%20windows) has fundamentally changed how models process information, though research shows that [longer prompts generally produce less accurate outputs](https://www.meibel.ai/post/understanding-the-impact-of-increasing-llm-context-windows#:~:text=There%20is%20a%20trade%2Doff,less%20accuracy%20than%20shorter%20prompts) due to a declining signal-to-noise ratio, which means practitioners must carefully balance the [tradeoff between comprehensive context and generation speed](https://www.meibel.ai/post/understanding-the-impact-of-increasing-llm-context-windows#:~:text=using%20more%20input%20tokens,slower%20output%20token%20generation).
+The rapid growth of context windows from 512 tokens in 2018 to over 1 million tokens by 2024 ([Meibel AI](https://www.meibel.ai/post/understanding-the-impact-of-increasing-llm-context-windows#:~:text=Context%20windows%20have%20grown%20exponentially,1%20million%20token%20context%20windows)) has fundamentally changed how models process information, though research shows that longer prompts generally produce less accurate outputs ([Meibel AI](https://www.meibel.ai/post/understanding-the-impact-of-increasing-llm-context-windows#:~:text=There%20is%20a%20trade%2Doff,less%20accuracy%20than%20shorter%20prompts)) due to a declining signal-to-noise ratio, which means practitioners must carefully balance the tradeoff between comprehensive context and generation speed ([Meibel AI](https://www.meibel.ai/post/understanding-the-impact-of-increasing-llm-context-windows#:~:text=using%20more%20input%20tokens,slower%20output%20token%20generation)).
 
-Notice how citations are placed mid-sentence, directly next to the specific fact or claim they support, rather than parenthetically at the end.
+Notice how citations are placed mid-sentence, directly next to the specific fact or claim they support. The link display text is the website name, not the claim itself.
 
 Rules:
 1. ALWAYS use text fragment links - never cite a bare URL without a fragment.
@@ -57,7 +57,8 @@ Rules:
 3. Keep fragment text short - use just enough words to uniquely identify the passage (typically 4-8 words for start and end).
 4. URL-encode spaces as %20 and special characters appropriately.
 5. Place citations inline and mid-sentence where possible - attach the link directly to the claim, not at the end of the sentence.
-6. Prefer linking the claim text itself (e.g. [over 1 million tokens by 2024](url)) over parenthetical references (e.g. "claim ([Source](url))").
+6. Use the website name as the link display text (e.g. "over 1 million tokens by 2024 ([Meibel AI](url))"), not the claim text itself.
+7. Avoid tildes - The character `~` is reserved for citation text fragments and will break markdown rendering if not handled correctly. Opt for "roughly" or "approximately" to describe numbers or ranges.
 </citation_guidelines>
 
 Aim to return a comprehensive report, minumum 5 paragraphs of ~20 sentences each.
