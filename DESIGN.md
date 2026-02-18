@@ -216,3 +216,5 @@ I have a larger philosophy on evaluations that I've written up here: https://luc
 ---
 
 Thanks for reading my design brain dump!
+
+minor nit, realized I left recursion limit defaulted- which interestingly after generating 20 ish test reports I never ran into an explicit issue with until verifying once more a few days later. Added a limit of 1000 explicitly in to enable, if the agent so chooses, much longer runs

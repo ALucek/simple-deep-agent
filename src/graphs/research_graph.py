@@ -100,4 +100,4 @@ builder.add_conditional_edges(
 )
 builder.add_edge("web_search", "research_agent")
 
-research_graph = builder.compile()
+research_graph = builder.compile().with_config(recursion_limit=1000)

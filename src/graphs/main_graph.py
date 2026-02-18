@@ -109,4 +109,4 @@ builder.add_conditional_edges(
 builder.add_edge("research_agent", "orchestrator")
 builder.add_edge("todo_list", "orchestrator")
 
-main_graph = builder.compile()
+main_graph = builder.compile().with_config(recursion_limit=1000)
