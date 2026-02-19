@@ -18,25 +18,14 @@ if REPO_ROOT not in sys.path:
 from src.graphs.main_graph import builder
 
 
-def _extract_interrupt(event: dict) -> str | None:
-    interrupts = event.get("__interrupt__")
-    if not interrupts:
-        return None
-    if isinstance(interrupts, (list, tuple)):
-        interrupt_obj = interrupts[0] if interrupts else None
-    else:
-        interrupt_obj = interrupts
-    if interrupt_obj is None:
-        return None
-    return getattr(interrupt_obj, "value", interrupt_obj)
-
-
 async def run() -> None:
-    graph = builder.compile(checkpointer=InMemorySaver())
+    graph = builder.compile(checkpointer=InMemorySaver()).with_config(recursion_limit=1000)
     thread_id = str(uuid.uuid4())
     config = {"configurable": {"thread_id": thread_id}}
 
-    user_input = input("User: ").strip()
+    print("="*10, "Simple Deep Research Agent", "="*10)
+    
+    user_input = input("\nUser: ").strip()
     if not user_input:
         print("No input provided.")
         return
@@ -50,7 +39,8 @@ async def run() -> None:
         last_ai_message = None
 
         async for event in graph.astream(next_input, config, stream_mode="updates"):
-            interrupt_question = _extract_interrupt(event) or interrupt_question
+            if "__interrupt__" in event:
+                interrupt_question = event["__interrupt__"][0].value["question"]
             for payload in event.values():
                 if isinstance(payload, dict) and "messages" in payload:
                     message = payload["messages"][-1]
@@ -63,7 +53,9 @@ async def run() -> None:
         if not interrupt_question:
             break
 
-        answer = input(f"{interrupt_question}\n> ").strip()
+        answer = input(
+            f"\nAssistant: {interrupt_question}\n\nUser: "
+        ).strip()
         next_input = Command(resume=answer)
 
 
