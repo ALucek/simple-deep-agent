@@ -3,6 +3,7 @@
   "dependencies": ["."],
   "graphs": {
     "main_graph": "./src/graphs/main_graph.py:main_graph",
+    "orchestrator_graph": "./src/graphs/orchestrator_graph.py:orchestrator_graph",
     "research_graph": "./src/graphs/research_graph.py:research_graph"
   },
   "env": "./.env"
