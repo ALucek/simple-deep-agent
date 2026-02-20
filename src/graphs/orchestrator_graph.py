@@ -5,13 +5,13 @@ from langgraph.prebuilt import ToolNode
 
 from src.models import ResearchConfig
 from src.prompts.deepagent_prompt import ORCHESTRATOR_SYSTEM_PROMPT
-from src.state import GraphState
+from src.state import OrchestratorState
 from src.tools.research_agent_tool import build_research_tool
 from src.tools.todo_list import build_todo_tool
 from src.utils import build_chat_model
 
 
-async def orchestrator_node(state: GraphState, config: RunnableConfig) -> dict:
+async def orchestrator_node(state: OrchestratorState, config: RunnableConfig) -> dict:
     cfg = ResearchConfig.from_runnable_config(config)
     research_tool = build_research_tool()
     todo_tool = build_todo_tool()
@@ -28,7 +28,7 @@ async def orchestrator_node(state: GraphState, config: RunnableConfig) -> dict:
     return {"messages": [response]}
 
 
-def route_orchestrator(state: GraphState) -> str:
+def route_orchestrator(state: OrchestratorState) -> str:
     last_message = state["messages"][-1]
     if not isinstance(last_message, AIMessage) or not last_message.tool_calls:
         return "end"
@@ -43,7 +43,7 @@ def route_orchestrator(state: GraphState) -> str:
 research_tool = build_research_tool()
 todo_tool = build_todo_tool()
 
-builder = StateGraph(GraphState)
+builder = StateGraph(OrchestratorState)
 builder.add_node("orchestrator", orchestrator_node)
 builder.add_node("research_agent", ToolNode([research_tool]))
 builder.add_node("todo_list", ToolNode([todo_tool]))

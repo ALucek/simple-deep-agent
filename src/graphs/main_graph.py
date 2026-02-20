@@ -5,13 +5,13 @@ from langgraph.types import interrupt
 
 from src.models import ClarificationDecision, ResearchConfig
 from src.prompts.clarify_prompt import CLARIFY_SYSTEM_PROMPT
-from src.state import GraphState
+from src.state import MainState
 from src.utils import build_chat_model
 from src.graphs.orchestrator_graph import orchestrator_graph
 
 
 async def decide_clarification_node(
-    state: GraphState, config: RunnableConfig
+    state: MainState, config: RunnableConfig
 ) -> dict:
     cfg = ResearchConfig.from_runnable_config(config)
     model = build_chat_model(
@@ -25,7 +25,7 @@ async def decide_clarification_node(
     return {"clarification_question": question}
 
 
-async def clarification_interrupt_node(state: GraphState) -> dict:
+async def clarification_interrupt_node(state: MainState) -> dict:
     question = state.get("clarification_question")
     if not question:
         return {}
@@ -39,13 +39,13 @@ async def clarification_interrupt_node(state: GraphState) -> dict:
     }
 
 
-def route_after_clarification(state: GraphState) -> str:
+def route_after_clarification(state: MainState) -> str:
     if state.get("clarification_question"):
         return "clarification_interrupt"
     return "orchestrator"
 
 
-builder = StateGraph(GraphState)
+builder = StateGraph(MainState)
 builder.add_node("decide_clarification", decide_clarification_node)
 builder.add_node("clarification_interrupt", clarification_interrupt_node)
 builder.add_node("orchestrator", orchestrator_graph)
