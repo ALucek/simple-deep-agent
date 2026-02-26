@@ -158,7 +158,7 @@ Model and search settings are passed through LangGraph's `configurable` dict. Ea
 
 Per-role configs are optional and accept the same kwargs as `default`. Only set fields override the default; omitted fields inherit from `default`.
 
-### Example
+### Example Config
 
 ```python
 config = {
@@ -169,18 +169,17 @@ config = {
             "temperature": 1,
         },
         "orchestrator": {
-            "temperature": 0.2,
+            "model": "gpt-5.2-pro-2025-12-11",
         },
         "researcher": {
             "model": "gpt-4.1-mini",
             "temperature": 0.7,
+            "max_tokens": 1000,
         },
         "max_searches": 50,
     }
 }
 ```
-
-In this example the orchestrator uses `gpt-5.2-2025-12-11` at temperature `0.2`, the researcher uses `gpt-4.1-mini` at `0.7`, and the clarifier inherits the defaults (`gpt-5.2-2025-12-11` at `1`).
 
 ## Using LangSmith Studio
 
