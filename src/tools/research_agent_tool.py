@@ -11,6 +11,7 @@ Usage guidelines:
 2. Be Specific - Research agents excel at individual topic deep dives. Avoid broad, multi-topic queries. Call this tool multiple times for different topics.
 """
 
+
 async def _run_research_agent(query: str, config: RunnableConfig) -> dict:
     result = await research_graph.ainvoke(
         {"messages": [HumanMessage(content=query)]},

@@ -10,6 +10,7 @@ Usage guidelines:
 3. Keep Items Granular - Each todo should represent a single, actionable step (e.g. one research query or one section to write), not a broad phase.
 """
 
+
 class TodoItem(BaseModel):
     description: str = Field(description="Description of the todo.")
     progress: Literal["completed", "in progress", "outstanding"] = Field(
