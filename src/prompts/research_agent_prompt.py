@@ -57,7 +57,7 @@ Rules:
 1. ALWAYS use text fragment links - never cite a bare URL without a fragment.
 2. The START_TEXT and END_TEXT should be pulled directly from the snippet returned by the search tool - do not fabricate or paraphrase the fragment text.
 3. Keep fragment text short - use just enough words to uniquely identify the passage (typically 4-8 words for start and end).
-4. URL-encode spaces as %20 and special characters appropriately.
+4. URL-encode spaces in links (NOT WEBSITE NAMES) as %20 and special characters appropriately
 5. Place citations inline and mid-sentence where possible - attach the link directly to the claim, not at the end of the sentence.
 6. Use the website name as the link display text (e.g. "over 1 million tokens by 2024 ([Meibel AI](url))"), not the claim text itself.
 7. Avoid tildes - The character `~` is reserved for citation text fragments and will break markdown rendering if not handled correctly. Opt for "roughly" or "approximately" to describe numbers or ranges.
