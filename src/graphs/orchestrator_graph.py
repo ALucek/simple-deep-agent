@@ -1,4 +1,4 @@
-from langchain_core.messages import AIMessage, SystemMessage
+from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode
@@ -15,6 +15,12 @@ research_tool = build_research_tool()
 todo_tool = build_todo_tool()
 
 
+MIXED_TOOL_WARNING = (
+    "Error: You called both run_research_agent and set_todos in the same turn. "
+    "These must be called in separate turns. Please retry with only one tool type."
+)
+
+
 async def orchestrator_node(state: OrchestratorState, config: RunnableConfig) -> dict:
     cfg = ResearchConfig.from_runnable_config(config)
     model = build_chat_model(cfg, role="orchestrator").bind_tools(
@@ -25,6 +31,24 @@ async def orchestrator_node(state: OrchestratorState, config: RunnableConfig) ->
         *state["messages"],
     ]
     response = await model.ainvoke(messages, config=config)
+
+    if response.tool_calls:
+        tool_names = {call.get("name") for call in response.tool_calls}
+        if len(tool_names) > 1:
+            return {
+                "messages": [
+                    response,
+                    *[
+                        ToolMessage(
+                            content=MIXED_TOOL_WARNING,
+                            name=call.get("name", ""),
+                            tool_call_id=call.get("id", ""),
+                        )
+                        for call in response.tool_calls
+                    ],
+                ]
+            }
+
     return {"messages": [response]}
 
 
@@ -38,6 +62,7 @@ def route_orchestrator(state: OrchestratorState) -> str:
     if tool_names == {"set_todos"}:
         return "todo_list"
     return "end"
+
 
 builder = StateGraph(OrchestratorState)
 builder.add_node("orchestrator", orchestrator_node)
