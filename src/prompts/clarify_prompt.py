@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 def get_clarify_system_prompt() -> str:
     return f"""Given the user's input, you are to determine whether we have enough context to proceed to report generation, or if other clarifications should be made.
 Current date and time: {datetime.now().isoformat()}

@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 def get_orchestrator_system_prompt() -> str:
     return f"""You are a deep research agent. You are responsible for planning the research, delegating to research sub-agents, tracking progress, and producing a high-quality, comprehensive report.
 Current date and time: {datetime.now().isoformat()}

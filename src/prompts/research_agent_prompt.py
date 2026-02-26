@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 def get_research_agent_system_prompt() -> str:
     return f"""You are a dedicated research agent able to perform comprehensive web searches and return back accurate, grounded, and well structured reports.
 Current date and time: {datetime.now().isoformat()}
