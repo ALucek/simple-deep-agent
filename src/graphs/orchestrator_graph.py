@@ -54,6 +54,10 @@ async def orchestrator_node(state: OrchestratorState, config: RunnableConfig) ->
 
 def route_orchestrator(state: OrchestratorState) -> str:
     last_message = state["messages"][-1]
+    if isinstance(last_message, ToolMessage):
+        if last_message.content == MIXED_TOOL_WARNING:
+            return "orchestrator"
+        return "end"
     if not isinstance(last_message, AIMessage) or not last_message.tool_calls:
         return "end"
     tool_names = {call.get("name") for call in last_message.tool_calls}
@@ -74,6 +78,7 @@ builder.add_conditional_edges(
     "orchestrator",
     route_orchestrator,
     {
+            "orchestrator": "orchestrator",
         "research_agent": "research_agent",
         "todo_list": "todo_list",
         "end": END,
