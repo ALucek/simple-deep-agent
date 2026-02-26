@@ -11,10 +11,12 @@ from src.tools.todo_list import build_todo_tool
 from src.utils import build_chat_model
 
 
+research_tool = build_research_tool()
+todo_tool = build_todo_tool()
+
+
 async def orchestrator_node(state: OrchestratorState, config: RunnableConfig) -> dict:
     cfg = ResearchConfig.from_runnable_config(config)
-    research_tool = build_research_tool()
-    todo_tool = build_todo_tool()
     model = build_chat_model(cfg, role="orchestrator").bind_tools(
         [research_tool, todo_tool]
     )
@@ -36,10 +38,6 @@ def route_orchestrator(state: OrchestratorState) -> str:
     if tool_names == {"set_todos"}:
         return "todo_list"
     return "end"
-
-
-research_tool = build_research_tool()
-todo_tool = build_todo_tool()
 
 builder = StateGraph(OrchestratorState)
 builder.add_node("orchestrator", orchestrator_node)
