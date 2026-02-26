@@ -45,8 +45,11 @@ def format_results_markdown(results: dict) -> str:
     return "\n".join(lines)
 
 def filter_results(results: dict) -> dict:
-    raw_results = results.get("results", [])
-    results["results"] = [
-        r for r in raw_results if r.get("score", 0) >= RELEVANCE_SCORE_THRESHOLD
-    ]
-    return results
+    return {
+        **results,
+        "results": [
+            r
+            for r in results.get("results", [])
+            if r.get("score", 0) >= RELEVANCE_SCORE_THRESHOLD
+        ],
+    }
