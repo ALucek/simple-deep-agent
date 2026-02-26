@@ -4,11 +4,17 @@ from langchain_core.messages import AnyMessage
 from langgraph.graph.message import add_messages
 
 
-class GraphState(TypedDict):
-    """State for the main orchestration graph."""
+class MainState(TypedDict):
+    """State for the top-level graph (clarification + handoff)."""
 
     messages: Annotated[list[AnyMessage], add_messages]
     clarification_question: str | None
+
+
+class OrchestratorState(TypedDict):
+    """State for the orchestrator subgraph."""
+
+    messages: Annotated[list[AnyMessage], add_messages]
 
 
 class ResearchState(TypedDict):

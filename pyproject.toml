@@ -10,6 +10,7 @@ dependencies = [
     "langgraph>=1.0.8",
     "langgraph-cli[inmem]>=0.4.12",
     "pydantic>=2.12.5",
+    "langgraph-api>=0.7.47",
 ]
 
 [dependency-groups]

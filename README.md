@@ -4,13 +4,16 @@ This repository contains a simplified implementation of a deep research agent bu
 
 ## How It Works
 
-The Simple Deep Research agent is built on the core principles of deep agents like Claude Code, Codex, and Cursor while integrating the user experience of popular deep research implementations like ChatGPT's. The system is composed of two LangGraph graphs:
+The Simple Deep Research agent is built on the core principles of deep agents like Claude Code, Codex, and Cursor while integrating the user experience of popular deep research implementations like ChatGPT's. The system is composed of three LangGraph graphs arranged in a nested architecture:
 
-**Main Graph** - Orchestrates the full research lifecycle:
+**Main Graph** - Top-level entry point handling the clarification loop:
 1. **Clarify** - Asks the user clarifying questions via `interrupt`, resumes when answered
-2. **Plan** - Orchestrator uses a todo list tool to outline research steps
-3. **Delegate** - Kicks off research sub-agents in parallel via tool calls
-4. **Synthesize** - Combines sub-agent findings into a final cited report
+2. **Orchestrate** - Once clarification is complete, hands off to the orchestrator subgraph
+
+**Orchestrator Graph** - ReACT-style subgraph for delegating research agents and writing the final report:
+1. **Plan** - Uses a todo list tool to outline research steps
+2. **Delegate** - Kicks off research sub-agents in parallel via tool calls
+3. **Synthesize** - Combines sub-agent findings into a final cited report
 
 **Research Graph** - ReAct-style sub-graph for web research:
 1. Decides what to search, calls [Tavily](https://www.tavily.com/) web search
@@ -59,7 +62,7 @@ A simplified example of how this can be implemented is provided in [examples/run
 uv run examples/run_agent.py
 ```
 
-The research sub agent can also be used independently. For example:
+The orchestrator and researcher subgraph can also be used independently. For example with the orchestrator:
 
 ```python
 import asyncio
@@ -68,14 +71,56 @@ import uuid
 from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.memory import InMemorySaver
 
-from src.graphs.research_graph import builder
+from src.graphs.orchestrator_graph import builder as orchestrator_builder
 
-graph = builder.compile(checkpointer=InMemorySaver())
+graph = orchestrator_builder.compile(checkpointer=InMemorySaver()).with_config(
+    recursion_limit=1000
+)
 config = {"configurable": {"thread_id": str(uuid.uuid4())}}
 
 result = asyncio.run(
     graph.ainvoke(
-        {"messages": [HumanMessage(content="Research top trends in edge AI.")]},
+        {
+            "messages": [
+                HumanMessage(
+                    content=(
+                        "Research current trends in edge AI for industrial robotics."
+                    )
+                )
+            ]
+        },
+        config,
+    )
+)
+
+print(result["messages"][-1].content)
+```
+
+And with the research sub-agent:
+
+```python
+import asyncio
+import uuid
+
+from langchain_core.messages import HumanMessage
+from langgraph.checkpoint.memory import InMemorySaver
+
+from src.graphs.research_graph import builder as research_builder
+
+graph = research_builder.compile(checkpointer=InMemorySaver()).with_config(
+    recursion_limit=1000
+)
+config = {"configurable": {"thread_id": str(uuid.uuid4())}}
+
+result = asyncio.run(
+    graph.ainvoke(
+        {
+            "messages": [
+                HumanMessage(
+                    content="Research top trends in edge AI."
+                )
+            ]
+        },
         config,
     )
 )
@@ -91,16 +136,28 @@ To initiate the Simple Deep Research agent in LangSmith Studio, launch the local
 uv run langgraph dev
 ```
 
-This will automatically open a window in your browser to the studio IDE. Within the IDE there are two graphs viewable, the `main_graph`:
+This will automatically open a window in your browser to the studio IDE. Within the IDE there are three graphs viewable:
+
+### `main_graph`
+
+The top-level graph handling clarification and delegating to the orchestrator subgraph
 
 <img src="./media/main_graph.png" width=600>
 
-This contains the core flow and logic for the Simple Deep Research agent. In the top menu you can also choose the `research_graph`:
+### `orchestrator_graph`
 
-<img src="./media/sub_agent.png" width=600>
+The orchestrator loop (plan, delegate, synthesize) mounted as a node in the main graph
 
-This contains the research sub agent graph responsible for searching the web.
+<img src="./media/orchestrator_graph.png" width=600>
 
-<img src="./media/ls_studio.png" width=600>
+### `research_graph`
+
+The research sub-agent responsible for searching the web
+
+<img src="./media/research_graph.png" width=600>
+
+---
 
 The graphs can then be interacted with directly in the interface!
+
+<img src="./media/ls_studio.png" width=600>
