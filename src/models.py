@@ -69,5 +69,3 @@ class ResearchTask(BaseModel):
     query: str = Field(description="The research query to investigate.")
 
 
-class ResearchReport(BaseModel):
-    content: str = Field(description="The research report content.")

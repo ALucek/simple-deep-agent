@@ -2,7 +2,7 @@ from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import StructuredTool
 
-from src.models import ResearchReport, ResearchTask
+from src.models import ResearchTask
 from src.graphs.research_graph import research_graph
 
 RESEARCH_AGENT_TOOL_DESCRIPTION = """Run a focused research sub-agent that will perform comprehensive web searches and return a structured report. 
@@ -19,8 +19,7 @@ async def _run_research_agent(query: str, config: RunnableConfig) -> dict:
     )
     last_message = result["messages"][-1]
     content = getattr(last_message, "content", "") or ""
-    report = ResearchReport(content=content)
-    return report.model_dump()
+    return {"content": content}
 
 
 def build_research_tool() -> StructuredTool:
