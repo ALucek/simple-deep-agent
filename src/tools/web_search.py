@@ -9,6 +9,7 @@ Usage guidelines:
 2. Be Specific - Avoid broad, multi-topic queries. Call this tool multiple times for different topics.
 """
 
+
 def build_tavily_tool(
     max_results: int = MAX_RESULTS,
     auto_parameters: bool = AUTO_PARAMETERS,
@@ -24,6 +25,7 @@ def build_tavily_tool(
     tool.name = "internet_search"
     tool.description = TOOL_DESCRIPTION
     return tool
+
 
 def format_results_markdown(results: dict) -> str:
     """Format search results as loose markdown for LLM input."""
@@ -43,6 +45,7 @@ def format_results_markdown(results: dict) -> str:
             lines.append(f"\t- {content}\n")
 
     return "\n".join(lines)
+
 
 def filter_results(results: dict) -> dict:
     return {
