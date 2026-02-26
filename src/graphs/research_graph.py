@@ -5,7 +5,7 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 
 from src.models import ResearchConfig
-from src.prompts.research_agent_prompt import RESEARCH_AGENT_SYSTEM_PROMPT
+from src.prompts.research_agent_prompt import get_research_agent_system_prompt
 from src.state import ResearchState
 from src.tools.web_search import (
     build_tavily_tool,
@@ -24,7 +24,7 @@ async def research_agent_node(state: ResearchState, config: RunnableConfig) -> d
         temperature=cfg.researcher_temperature,
     ).bind_tools([web_search_tool])
     messages = [
-        SystemMessage(content=RESEARCH_AGENT_SYSTEM_PROMPT),
+        SystemMessage(content=get_research_agent_system_prompt()),
         *state["messages"],
     ]
     response = await model.ainvoke(messages, config=config)

@@ -4,7 +4,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
 from src.models import ClarificationDecision, ResearchConfig
-from src.prompts.clarify_prompt import CLARIFY_SYSTEM_PROMPT
+from src.prompts.clarify_prompt import get_clarify_system_prompt
 from src.state import MainState
 from src.utils import build_chat_model
 from src.graphs.orchestrator_graph import orchestrator_graph
@@ -19,7 +19,10 @@ async def decide_clarification_node(
         model=cfg.clarifier_model,
         temperature=cfg.clarifier_temperature,
     ).with_structured_output(ClarificationDecision)
-    messages = [SystemMessage(content=CLARIFY_SYSTEM_PROMPT), *state["messages"]]
+    messages = [
+        SystemMessage(content=get_clarify_system_prompt()),
+        *state["messages"],
+    ]
     decision = await model.ainvoke(messages, config=config)
     question = decision.question if decision.needs_clarification else None
     return {"clarification_question": question}

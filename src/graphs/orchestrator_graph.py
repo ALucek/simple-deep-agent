@@ -4,7 +4,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode
 
 from src.models import ResearchConfig
-from src.prompts.deepagent_prompt import ORCHESTRATOR_SYSTEM_PROMPT
+from src.prompts.deepagent_prompt import get_orchestrator_system_prompt
 from src.state import OrchestratorState
 from src.tools.research_agent_tool import build_research_tool
 from src.tools.todo_list import build_todo_tool
@@ -21,7 +21,7 @@ async def orchestrator_node(state: OrchestratorState, config: RunnableConfig) ->
         temperature=cfg.orchestrator_temperature,
     ).bind_tools([research_tool, todo_tool])
     messages = [
-        SystemMessage(content=ORCHESTRATOR_SYSTEM_PROMPT),
+        SystemMessage(content=get_orchestrator_system_prompt()),
         *state["messages"],
     ]
     response = await model.ainvoke(messages, config=config)

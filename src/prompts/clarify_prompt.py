@@ -1,6 +1,7 @@
 from datetime import datetime
 
-CLARIFY_SYSTEM_PROMPT = f"""Given the user's input, you are to determine whether we have enough context to proceed to report generation, or if other clarifications should be made.
+def get_clarify_system_prompt() -> str:
+    return f"""Given the user's input, you are to determine whether we have enough context to proceed to report generation, or if other clarifications should be made.
 Current date and time: {datetime.now().isoformat()}
 
 By default, we should probe the user once to provide more details by returning two to three personalized questions based on their original query. 
