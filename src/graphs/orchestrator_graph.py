@@ -15,11 +15,9 @@ async def orchestrator_node(state: OrchestratorState, config: RunnableConfig) ->
     cfg = ResearchConfig.from_runnable_config(config)
     research_tool = build_research_tool()
     todo_tool = build_todo_tool()
-    model = build_chat_model(
-        cfg,
-        model=cfg.orchestrator_model,
-        temperature=cfg.orchestrator_temperature,
-    ).bind_tools([research_tool, todo_tool])
+    model = build_chat_model(cfg, role="orchestrator").bind_tools(
+        [research_tool, todo_tool]
+    )
     messages = [
         SystemMessage(content=get_orchestrator_system_prompt()),
         *state["messages"],

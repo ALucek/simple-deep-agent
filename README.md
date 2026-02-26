@@ -128,6 +128,60 @@ result = asyncio.run(
 print(result["messages"][-1].content)
 ```
 
+## Configuration
+
+Model and search settings are passed through LangGraph's `configurable` dict. Each role (orchestrator, clarifier, researcher) inherits from a shared `default` and can be overridden individually. Any valid [ChatOpenAI](https://python.langchain.com/docs/integrations/chat/openai/) parameter can be passed.
+
+### Structure
+
+```json
+{
+  "configurable": {
+    "thread_id": "...",
+    "default": {
+      "model": "gpt-5.2-2025-12-11",
+      "temperature": 1
+    },
+    "orchestrator": {},
+    "clarifier": {},
+    "researcher": {},
+    "max_searches": 30
+  }
+}
+```
+
+- **`default`** — Base settings applied to all roles. Must include at least a `model`. Accepts any valid [ChatOpenAI](https://reference.langchain.com/python/langchain-openai/chat_models/base/ChatOpenAI) parameter (`model`, `temperature`, `max_tokens`, `top_p`, `base_url`, etc.).
+- **`orchestrator`** — Overrides for the orchestration agent that plans and synthesizes the report.
+- **`clarifier`** — Overrides for the clarification agent that scopes the research query.
+- **`researcher`** — Overrides for the research sub-agents that perform web searches.
+- **`max_searches`** — Hard limit on web searches per research sub-agent run.
+
+Per-role configs are optional and accept the same kwargs as `default`. Only set fields override the default; omitted fields inherit from `default`.
+
+### Example
+
+```python
+config = {
+    "configurable": {
+        "thread_id": str(uuid.uuid4()),
+        "default": {
+            "model": "gpt-5.2-2025-12-11",
+            "temperature": 1,
+        },
+        "orchestrator": {
+            "temperature": 0.2,
+        },
+        "researcher": {
+            "model": "gpt-4.1-mini",
+            "temperature": 0.7,
+        },
+        "max_searches": 50,
+    }
+}
+```
+
+In this example the orchestrator uses `gpt-5.2-2025-12-11` at temperature `0.2`, the researcher uses `gpt-4.1-mini` at `0.7`, and the clarifier inherits the defaults (`gpt-5.2-2025-12-11` at `1`).
+
 ## Using LangSmith Studio
 
 To initiate the Simple Deep Research agent in LangSmith Studio, launch the local langgraph server via the command:

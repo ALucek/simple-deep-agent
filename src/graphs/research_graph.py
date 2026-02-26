@@ -18,11 +18,7 @@ from src.utils import build_chat_model
 async def research_agent_node(state: ResearchState, config: RunnableConfig) -> dict:
     cfg = ResearchConfig.from_runnable_config(config)
     web_search_tool = build_tavily_tool()
-    model = build_chat_model(
-        cfg,
-        model=cfg.researcher_model,
-        temperature=cfg.researcher_temperature,
-    ).bind_tools([web_search_tool])
+    model = build_chat_model(cfg, role="researcher").bind_tools([web_search_tool])
     messages = [
         SystemMessage(content=get_research_agent_system_prompt()),
         *state["messages"],

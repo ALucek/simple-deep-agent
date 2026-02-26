@@ -14,11 +14,9 @@ async def decide_clarification_node(
     state: MainState, config: RunnableConfig
 ) -> dict:
     cfg = ResearchConfig.from_runnable_config(config)
-    model = build_chat_model(
-        cfg,
-        model=cfg.clarifier_model,
-        temperature=cfg.clarifier_temperature,
-    ).with_structured_output(ClarificationDecision)
+    model = build_chat_model(cfg, role="clarifier").with_structured_output(
+        ClarificationDecision
+    )
     messages = [
         SystemMessage(content=get_clarify_system_prompt()),
         *state["messages"],

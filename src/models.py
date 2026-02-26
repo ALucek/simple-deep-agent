@@ -1,6 +1,37 @@
-from typing import Any
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
+
+
+class DefaultRoleConfig(BaseModel):
+    """Default model settings."""
+
+    model_config = ConfigDict(extra="allow")
+
+    model: str = Field(
+        default="gpt-5.2-2025-12-11",
+        min_length=1,
+        description="Default model for all roles.",
+    )
+    temperature: float = Field(
+        default=1,
+        description="Default temperature for all roles.",
+    )
+
+
+class RoleConfig(BaseModel):
+    """Per-role overrides for model settings."""
+
+    model_config = ConfigDict(extra="allow")
+
+    model: str | None = Field(
+        default=None,
+        description="Optional model override for this role.",
+    )
+    temperature: float | None = Field(
+        default=None,
+        description="Optional temperature override for this role.",
+    )
 
 
 class ResearchConfig(BaseModel):
@@ -8,42 +39,36 @@ class ResearchConfig(BaseModel):
 
     model_config = ConfigDict(extra="ignore")
 
-    model: str = Field(
-        default="gpt-5.2-2025-12-11",
-        description="Default model for all roles if role overrides not set.",
+    default: DefaultRoleConfig = Field(
+        default_factory=DefaultRoleConfig,
+        description="Default model settings for all roles.",
     )
-    temperature: float = Field(
-        default=1,
-        description="Default temperature for all roles if role overrides not set.",
+    orchestrator: RoleConfig = Field(
+        default_factory=RoleConfig,
+        description="Overrides for the orchestration agent.",
     )
-    orchestrator_model: str | None = Field(
-        default=None,
-        description="Optional model override for the orchestration agent.",
+    clarifier: RoleConfig = Field(
+        default_factory=RoleConfig,
+        description="Overrides for the clarifying agent.",
     )
-    orchestrator_temperature: float | None = Field(
-        default=None,
-        description="Optional temperature override for the orchestration agent.",
-    )
-    clarifier_model: str | None = Field(
-        default=None,
-        description="Optional model override for the clarifying agent.",
-    )
-    clarifier_temperature: float | None = Field(
-        default=None,
-        description="Optional temperature override for the clarifying agent.",
-    )
-    researcher_model: str | None = Field(
-        default=None,
-        description="Optional model override for the research sub-agent.",
-    )
-    researcher_temperature: float | None = Field(
-        default=None,
-        description="Optional temperature override for the research sub-agent.",
+    researcher: RoleConfig = Field(
+        default_factory=RoleConfig,
+        description="Overrides for the research sub-agent.",
     )
     max_searches: int = Field(
         default=30,
         description="Hard limit on the number of web searches per research run.",
     )
+
+    ROLES: ClassVar[set[str]] = {"orchestrator", "clarifier", "researcher"}
+
+    def chat_kwargs(self, role: str | None = None) -> dict[str, Any]:
+        kwargs = self.default.model_dump(exclude_none=True)
+        if role:
+            if role not in self.ROLES:
+                raise ValueError(f"Unknown role {role!r}, expected one of {self.ROLES}")
+            kwargs.update(getattr(self, role).model_dump(exclude_none=True))
+        return kwargs
 
     @classmethod
     def from_runnable_config(cls, config: dict[str, Any] | None) -> "ResearchConfig":
@@ -67,5 +92,3 @@ class ClarificationDecision(BaseModel):
 
 class ResearchTask(BaseModel):
     query: str = Field(description="The research query to investigate.")
-
-

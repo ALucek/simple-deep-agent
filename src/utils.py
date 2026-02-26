@@ -1,4 +1,6 @@
 
+from typing import Any
+
 from langchain_openai import ChatOpenAI
 
 from src.models import ResearchConfig
@@ -7,12 +9,12 @@ from src.models import ResearchConfig
 def build_chat_model(
     config: ResearchConfig,
     *,
-    model: str | None = None,
-    temperature: float | None = None,
+    role: str | None = None,
+    **overrides: Any,
 ) -> ChatOpenAI:
-    return ChatOpenAI(
-        model=model or config.model,
-        temperature=temperature if temperature is not None else config.temperature,
-    )
+    kwargs = config.chat_kwargs(role=role)
+    if overrides:
+        kwargs.update(overrides)
+    return ChatOpenAI(**kwargs)
 
 
