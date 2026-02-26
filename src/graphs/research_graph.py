@@ -14,10 +14,11 @@ from src.tools.web_search import (
 )
 from src.utils import build_chat_model
 
+web_search_tool = build_tavily_tool()
+
 
 async def research_agent_node(state: ResearchState, config: RunnableConfig) -> dict:
     cfg = ResearchConfig.from_runnable_config(config)
-    web_search_tool = build_tavily_tool()
     model = build_chat_model(cfg, role="researcher").bind_tools([web_search_tool])
     messages = [
         SystemMessage(content=get_research_agent_system_prompt()),
@@ -44,7 +45,6 @@ async def web_search_node(state: ResearchState, config: RunnableConfig) -> dict:
     execute_calls = tool_calls[:remaining]
     skipped_calls = tool_calls[remaining:]
 
-    web_search_tool = build_tavily_tool()
     tasks = [
         web_search_tool.ainvoke(call.get("args", {}))
         for call in execute_calls
