@@ -17,14 +17,13 @@ Usage guidelines:
 """
 
 
-async def _run_subagent(task: str, config: RunnableConfig) -> dict:
+async def _run_subagent(task: str, config: RunnableConfig) -> str:
     result = await subagent.ainvoke(
         {"messages": [HumanMessage(content=task)]},
         config=config,
     )
     last_message = result["messages"][-1]
-    content = getattr(last_message, "content", "") or ""
-    return {"content": content}
+    return getattr(last_message, "content", "") or ""
 
 
 def build_subagent_tool() -> StructuredTool:
