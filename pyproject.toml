@@ -5,15 +5,15 @@ description = "Simple Deep Research Agent Implementation Using LangGraph"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "langchain-openai>=1.1.9",
-    "langchain-tavily>=0.2.17",
-    "langgraph>=1.0.8",
-    "langgraph-cli[inmem]>=0.4.12",
-    "pydantic>=2.12.5",
-    "langgraph-api>=0.7.47",
+    "langchain-tavily>=0.2.18",
+    "langgraph>=1.2.7",
+    "langgraph-cli[inmem]>=0.4.30",
+    "pydantic>=2.13.4",
+    "langgraph-api>=0.10.0",
+    "langchain-openrouter>=0.2.5",
 ]
 
 [dependency-groups]
 dev = [
-    "ruff>=0.15.1",
+    "ruff>=0.15.20",
 ]

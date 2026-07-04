@@ -3,11 +3,11 @@ from typing import Literal
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 
-TODO_LIST_TOOL_DESCRIPTION = """Track and manage your research plan as a structured todo list. Each call overwrites the entire list, so always include all items with their current status.
+TODO_LIST_TOOL_DESCRIPTION = """Track and manage your plan as a structured todo list. Each call overwrites the entire list, so always include all items with their current status.
 Usage guidelines:
 1. Always Send Full State - This tool replaces the todo list on every call. Include all items (completed, in progress, and outstanding) each time, not just changes.
 2. Update Frequently - Call this tool after completing a step or before starting a new one to keep the plan accurate and up to date.
-3. Keep Items Granular - Each todo should represent a single, actionable step (e.g. one research query or one section to write), not a broad phase.
+3. Keep Items Granular - Each todo should represent a single, actionable step (e.g. one subtask or one section to write), not a broad phase.
 """
 
 

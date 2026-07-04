@@ -1,42 +1,35 @@
 import asyncio
 
-from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
+from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 
-from src.models import ResearchConfig
-from src.prompts.research_agent_prompt import get_research_agent_system_prompt
-from src.state import ResearchState
-from src.tools.web_search import (
-    build_tavily_tool,
-    filter_results,
-    format_results_markdown,
-)
-from src.utils import build_chat_model
+from src.config import AgentConfig
+from src.prompts.subagent_prompt import get_subagent_system_prompt
+from src.state import SubagentState
+from src.tools.web_search import build_tavily_tool, process_search_results
+from src.utils import build_chat_model, build_messages
 
 web_search_tool = build_tavily_tool()
 
 
-async def research_agent_node(state: ResearchState, config: RunnableConfig) -> dict:
-    cfg = ResearchConfig.from_runnable_config(config)
-    model = build_chat_model(cfg, role="researcher").bind_tools([web_search_tool])
-    messages = [
-        SystemMessage(content=get_research_agent_system_prompt()),
-        *state["messages"],
-    ]
+async def subagent_node(state: SubagentState, config: RunnableConfig) -> dict:
+    cfg = AgentConfig.from_runnable_config(config)
+    model = build_chat_model(cfg, role="subagent").bind_tools([web_search_tool])
+    messages = build_messages(get_subagent_system_prompt(), state["messages"])
     response = await model.ainvoke(messages, config=config)
     return {"messages": [response]}
 
 
-def route_research(state: ResearchState) -> str:
+def route_subagent(state: SubagentState) -> str:
     last_message = state["messages"][-1]
     if isinstance(last_message, AIMessage) and last_message.tool_calls:
         return "tools"
     return "end"
 
 
-async def web_search_node(state: ResearchState, config: RunnableConfig) -> dict:
-    cfg = ResearchConfig.from_runnable_config(config)
+async def web_search_node(state: SubagentState, config: RunnableConfig) -> dict:
+    cfg = AgentConfig.from_runnable_config(config)
     last_message = state["messages"][-1]
     tool_calls = last_message.tool_calls or []
 
@@ -56,7 +49,7 @@ async def web_search_node(state: ResearchState, config: RunnableConfig) -> dict:
         if isinstance(result, Exception):
             content = f"Error running search: {result}"
         elif isinstance(result, dict):
-            content = format_results_markdown(filter_results(result))
+            content = process_search_results(result)
         else:
             content = str(result)
         tool_messages.append(
@@ -85,15 +78,15 @@ async def web_search_node(state: ResearchState, config: RunnableConfig) -> dict:
     }
 
 
-builder = StateGraph(ResearchState)
-builder.add_node("research_agent", research_agent_node)
+builder = StateGraph(SubagentState)
+builder.add_node("subagent", subagent_node)
 builder.add_node("web_search", web_search_node)
-builder.add_edge(START, "research_agent")
+builder.add_edge(START, "subagent")
 builder.add_conditional_edges(
-    "research_agent",
-    route_research,
+    "subagent",
+    route_subagent,
     {"tools": "web_search", "end": END},
 )
-builder.add_edge("web_search", "research_agent")
+builder.add_edge("web_search", "subagent")
 
-research_graph = builder.compile().with_config(recursion_limit=1000)
+subagent = builder.compile().with_config(recursion_limit=100)

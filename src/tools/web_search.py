@@ -27,15 +27,16 @@ def build_tavily_tool(
     return tool
 
 
-def format_results_markdown(results: dict) -> str:
-    """Format search results as loose markdown for LLM input."""
-    # Grab the results and query from the results dictionary
-    items = results.get("results", [])
+def process_search_results(results: dict) -> str:
+    """Filter out low-relevance results and format the rest as markdown for LLM input."""
+    items = [
+        item
+        for item in results.get("results", [])
+        if item.get("score", 0) >= RELEVANCE_SCORE_THRESHOLD
+    ]
     query = results.get("query", "")
-    header = f"## Search results for: {query}\n"
-    lines = [header]
+    lines = [f"## Search results for: {query}\n"]
 
-    # Format the results as LLM Friendly markdown
     for index, item in enumerate(items, start=1):
         title = item.get("title", "")
         url = item.get("url", "")
@@ -45,14 +46,3 @@ def format_results_markdown(results: dict) -> str:
             lines.append(f"\t- {content}\n")
 
     return "\n".join(lines)
-
-
-def filter_results(results: dict) -> dict:
-    return {
-        **results,
-        "results": [
-            r
-            for r in results.get("results", [])
-            if r.get("score", 0) >= RELEVANCE_SCORE_THRESHOLD
-        ],
-    }
